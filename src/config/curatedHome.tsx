@@ -155,6 +155,15 @@ function toggleIdsOf(key: string): string[] {
 }
 
 /**
+ * Indoor TVs — used by both "We're leaving" and "Good night". Still missing
+ * the master bedroom TV as of 2026-08-26; add its entity_id here once known.
+ */
+const CURATED_INDOOR_TVS: string[] = [
+  "media_player.andys_shield",
+  "media_player.living_room_living_room_tv_os",
+];
+
+/**
  * One-tap scenes shown on the Home screen's Quick Actions card. Each just
  * bulk turn_on/turn_off's a list of entities via the generic `homeassistant`
  * domain service (works across light/switch/fan regardless of which one a
@@ -168,9 +177,10 @@ export const CURATED_QUICK_ACTIONS: QuickAction[] = [
     action: "turn_off",
     // Every indoor room's lights/fans — driveway and backyard (external:
     // true) are left alone, since you'd still want those on while out.
-    entityIds: CURATED_ROOMS.filter((r) => !r.external).flatMap((r) =>
-      r.toggles.map((t) => t.entityId),
-    ),
+    entityIds: [
+      ...CURATED_ROOMS.filter((r) => !r.external).flatMap((r) => r.toggles.map((t) => t.entityId)),
+      ...CURATED_INDOOR_TVS,
+    ],
   },
   {
     key: "party",
@@ -188,9 +198,7 @@ export const CURATED_QUICK_ACTIONS: QuickAction[] = [
       ...toggleIdsOf("kitchen"),
       ...toggleIdsOf("living_room"),
       ...toggleIdsOf("dining_room"),
-      // TODO: add your TV media_player entity IDs here, e.g.
-      // "media_player.living_room_tv" — not in curatedHome.tsx yet since
-      // no TVs are configured as curated entities.
+      ...CURATED_INDOOR_TVS,
     ],
   },
 ];
