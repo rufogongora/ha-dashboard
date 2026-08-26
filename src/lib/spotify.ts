@@ -49,8 +49,10 @@ export async function searchTracks(query: string): Promise<SpotifyTrack[]> {
   if (!query.trim()) return [];
   const token = await getAccessToken();
 
+  // Spotify rejects some limit values (e.g. 12) with "Invalid limit" for
+  // apps on the default/unextended API tier — 10 is confirmed to work.
   const res = await fetch(
-    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=12`,
+    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   if (!res.ok) throw new Error(`Spotify search failed (${res.status}).`);
