@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { weatherThemeGroup, type WeatherThemeGroup } from "../../lib/weatherTheme";
+import { weatherPhotoUrl } from "../../lib/weatherPhoto";
 
 const BASE_GRADIENT: Record<WeatherThemeGroup, [day: string, night: string]> = {
   clear: [
@@ -67,13 +69,35 @@ export function WeatherBackground({
   const showSunMoon = group === "clear";
   const showMist = group === "fog";
 
+  const photoUrl = weatherPhotoUrl(group, isNight);
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  // A fresh condition/day-night combo means a new photo URL — until it
+  // finishes loading, keep showing the CSS scene instead of a blank/stale
+  // frame. (Adjusting state during render, React's documented pattern for
+  // resetting state when a derived value changes, rather than an effect.)
+  const [trackedUrl, setTrackedUrl] = useState(photoUrl);
+  if (photoUrl !== trackedUrl) {
+    setTrackedUrl(photoUrl);
+    setLoadedUrl(null);
+  }
+  const photoLoaded = loadedUrl === photoUrl;
+
   return (
     <div className="wxbg" style={{ background }} aria-hidden>
-      {isNight && STAR_OPACITY[group] > 0 && (
+      <img
+        key={photoUrl}
+        className="wxbg__photo"
+        src={photoUrl}
+        alt=""
+        style={{ opacity: photoLoaded ? 0.7 : 0 }}
+        onLoad={() => setLoadedUrl(photoUrl)}
+      />
+
+      {!photoLoaded && isNight && STAR_OPACITY[group] > 0 && (
         <div className="wxbg__stars" style={{ opacity: STAR_OPACITY[group] }} />
       )}
 
-      {showSunMoon && (
+      {!photoLoaded && showSunMoon && (
         <div
           className="wxbg__glow"
           style={
@@ -90,7 +114,7 @@ export function WeatherBackground({
         />
       )}
 
-      {clouds && (
+      {!photoLoaded && clouds && (
         <>
           <div
             className="wxbg__cloud"
@@ -132,9 +156,9 @@ export function WeatherBackground({
         </>
       )}
 
-      {showRain && <div className="wxbg__rain" />}
-      {showSnow && <div className="wxbg__snow" />}
-      {showMist && <div className="wxbg__mist" />}
+      {!photoLoaded && showRain && <div className="wxbg__rain" />}
+      {!photoLoaded && showSnow && <div className="wxbg__snow" />}
+      {!photoLoaded && showMist && <div className="wxbg__mist" />}
 
       {showStorm && (
         <>

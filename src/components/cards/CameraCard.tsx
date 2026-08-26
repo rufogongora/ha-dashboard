@@ -1,4 +1,4 @@
-import { RefreshCw, Star, VideoOff } from "lucide-react";
+import { Maximize2, RefreshCw, Star, VideoOff, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import type { EntityWithArea } from "../../ha/types";
@@ -33,6 +33,7 @@ export function CameraCard({
   const dead = isDead(ent);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [errored, setErrored] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const mountedRef = useRef(true);
   const Icon = iconFor(ent);
 
@@ -90,7 +91,11 @@ export function CameraCard({
         className={clsx(
           "relative aspect-video w-full overflow-hidden bg-black/40",
           bare ? "rounded-2xl" : "rounded-xl",
+          imgSrc && !dead && "cursor-pointer",
         )}
+        onClick={() => {
+          if (imgSrc && !dead) setFullscreen(true);
+        }}
       >
         {imgSrc && !dead ? (
           <img
@@ -109,11 +114,19 @@ export function CameraCard({
 stream unavailable
           </div>
         )}
+        {imgSrc && !dead && (
+          <div className="absolute bottom-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-md bg-black/50 text-white/90">
+            <Maximize2 size={12} />
+          </div>
+        )}
       </div>
 
       {onToggleFavorite && (
         <button
-          onClick={onToggleFavorite}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite();
+          }}
           className={clsx(
             "absolute right-4 top-4 text-text-dim transition-colors hover:text-warn",
             isFavorite && "text-warn",
@@ -122,6 +135,22 @@ stream unavailable
         >
           <Star size={14} fill={isFavorite ? "currentColor" : "none"} />
         </button>
+      )}
+
+      {fullscreen && imgSrc && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setFullscreen(false)}
+        >
+          <img src={imgSrc} alt={ent.friendlyName} className="max-h-full max-w-full rounded-xl object-contain" />
+          <button
+            onClick={() => setFullscreen(false)}
+            aria-label="Exit fullscreen"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70"
+          >
+            <X size={18} />
+          </button>
+        </div>
       )}
     </div>
   );
