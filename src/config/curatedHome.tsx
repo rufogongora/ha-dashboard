@@ -142,11 +142,18 @@ export const CURATED_ENERGY = {
 export const CURATED_WEATHER_ENTITY = "weather.forecast_home";
 
 /**
- * Cast target for the Spotify quick-play card (Quick Actions row) — plays
- * via the Spotcast integration's `spotcast.start` service, which targets a
- * regular HA media_player entity_id directly (not a separate Spotify
- * Connect device name). Requires Spotcast installed; not yet confirmed
- * working live, see project memory.
+ * Cast target for the Spotify quick-play card, via Spotcast's
+ * `spotcast.play_media` service (`data.media_player.entity_id`).
+ *
+ * If the living room TV is a Chromecast/Google Cast device, this existing
+ * entity is the right target (Spotcast defers to the `cast` integration's
+ * own entity for those). If it's a Spotify Connect device instead (e.g. the
+ * TV's own Spotify app, not cast to), Spotcast creates its OWN media_player
+ * entity for it once you open Spotify on the TV at least once post-setup —
+ * in that case this needs to point at that new entity instead. Check
+ * Settings > Devices & Services > Spotcast (or the
+ * `sensor.spotcast_<account>_spotify_devices` entity's `devices` attribute)
+ * to find it. Not yet confirmed working live, see project memory.
  */
 export const CURATED_SPOTIFY_TARGET = "media_player.living_room_living_room_tv_os";
 

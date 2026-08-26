@@ -38,12 +38,12 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
     setPlayingId(track.id);
     setPlayError(null);
     try {
-      await callService(
-        "spotcast",
-        "start",
-        { uri: track.uri },
-        { entity_id: CURATED_SPOTIFY_TARGET },
-      );
+      // Spotcast (Mincka fork, v6) doesn't use HA's standard target
+      // mechanism — the device goes inside `data.media_player.entity_id`.
+      await callService("spotcast", "play_media", {
+        media_player: { entity_id: CURATED_SPOTIFY_TARGET },
+        spotify_uri: track.uri,
+      });
     } catch {
       setPlayError("Couldn't start playback — is Spotcast installed and configured?");
     } finally {
