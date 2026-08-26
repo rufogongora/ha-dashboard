@@ -1,14 +1,23 @@
+import { useState } from "react";
 import type { QuickAction } from "../../config/curatedHome";
 import { useHa } from "../../ha/HaProvider";
+import { QuickActionToast } from "./QuickActionToast";
 
 export function QuickActionsCard({ actions }: { actions: QuickAction[] }) {
   const { callService } = useHa();
+  const [toastAction, setToastAction] = useState<QuickAction | null>(null);
+  // Bumped on every tap so re-tapping the same action while its toast is
+  // already showing remounts QuickActionToast (fresh animation + timer)
+  // instead of silently reusing the still-running one.
+  const [toastNonce, setToastNonce] = useState(0);
 
   function run(action: QuickAction) {
     if (action.entityIds.length === 0) return;
     callService("homeassistant", action.action, {}, { entity_id: action.entityIds }).catch(
       () => {},
     );
+    setToastAction(action);
+    setToastNonce((n) => n + 1);
   }
 
   return (
@@ -39,6 +48,14 @@ export function QuickActionsCard({ actions }: { actions: QuickAction[] }) {
           </button>
         ))}
       </div>
+
+      {toastAction && (
+        <QuickActionToast
+          key={`${toastAction.key}-${toastNonce}`}
+          action={toastAction}
+          onDismiss={() => setToastAction(null)}
+        />
+      )}
     </div>
   );
 }

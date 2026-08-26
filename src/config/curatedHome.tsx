@@ -148,6 +148,8 @@ export interface QuickAction {
   /** Whether pressing it turns its entities on or off. */
   action: "turn_on" | "turn_off";
   entityIds: string[];
+  /** Human-readable summary shown in the confirmation toast on tap. */
+  description: string;
 }
 
 function toggleIdsOf(key: string): string[] {
@@ -175,6 +177,7 @@ export const CURATED_QUICK_ACTIONS: QuickAction[] = [
     label: "We're leaving",
     icon: DoorOpen,
     action: "turn_off",
+    description: "Turning off every indoor light, fan, and TV. Driveway and backyard stay as they are.",
     // Every indoor room's lights/fans — driveway and backyard (external:
     // true) are left alone, since you'd still want those on while out.
     entityIds: [
@@ -187,6 +190,7 @@ export const CURATED_QUICK_ACTIONS: QuickAction[] = [
     label: "Party",
     icon: PartyPopper,
     action: "turn_on",
+    description: "Turning on the backyard door light, bar lights, and fridge.",
     entityIds: toggleIdsOf("backyard"),
   },
   {
@@ -194,6 +198,7 @@ export const CURATED_QUICK_ACTIONS: QuickAction[] = [
     label: "Good night",
     icon: Moon,
     action: "turn_off",
+    description: "Turning off the kitchen, living room, and dining room lights, plus the TVs.",
     entityIds: [
       ...toggleIdsOf("kitchen"),
       ...toggleIdsOf("living_room"),
