@@ -4,6 +4,7 @@ import { isNightFor } from "../lib/weatherTheme";
 import { CameraWall } from "./home/CameraWall";
 import { QuickActionsCard } from "./home/QuickActionsCard";
 import { RoomCard } from "./home/RoomCard";
+import { SpotifyCard } from "./home/SpotifyCard";
 import { StatusBar } from "./home/StatusBar";
 import { WeatherBackground } from "./home/WeatherBackground";
 import { Header } from "./Header";
@@ -35,6 +36,7 @@ export function HomeScreen() {
                 <RoomCard key={room.key} room={room} index={i} />
               ))}
               <QuickActionsCard actions={CURATED_QUICK_ACTIONS} />
+              <SpotifyCard />
             </div>
 
             <section>

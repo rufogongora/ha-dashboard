@@ -141,6 +141,15 @@ export const CURATED_ENERGY = {
 
 export const CURATED_WEATHER_ENTITY = "weather.forecast_home";
 
+/**
+ * Cast target for the Spotify quick-play card (Quick Actions row) — plays
+ * via the Spotcast integration's `spotcast.start` service, which targets a
+ * regular HA media_player entity_id directly (not a separate Spotify
+ * Connect device name). Requires Spotcast installed; not yet confirmed
+ * working live, see project memory.
+ */
+export const CURATED_SPOTIFY_TARGET = "media_player.living_room_living_room_tv_os";
+
 export interface QuickAction {
   key: string;
   label: string;

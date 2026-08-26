@@ -1,0 +1,154 @@
+import { useEffect, useRef, useState } from "react";
+import { Loader2, Play, Search, X } from "lucide-react";
+import { CURATED_SPOTIFY_TARGET } from "../../config/curatedHome";
+import { useHa } from "../../ha/HaProvider";
+import { isSpotifyConfigured, searchTracks, type SpotifyTrack } from "../../lib/spotify";
+
+const DEBOUNCE_MS = 400;
+
+export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
+  const { callService } = useHa();
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SpotifyTrack[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const [playError, setPlayError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const configured = isSpotifyConfigured();
+
+  const isEmpty = !query.trim();
+
+  useEffect(() => {
+    if (!configured || isEmpty) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setLoading(true);
+      setError(null);
+      searchTracks(query)
+        .then(setResults)
+        .catch((err) => setError(err instanceof Error ? err.message : "Search failed."))
+        .finally(() => setLoading(false));
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(debounceRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, configured, isEmpty]);
+
+  async function play(track: SpotifyTrack) {
+    setPlayingId(track.id);
+    setPlayError(null);
+    try {
+      await callService(
+        "spotcast",
+        "start",
+        { uri: track.uri },
+        { entity_id: CURATED_SPOTIFY_TARGET },
+      );
+    } catch {
+      setPlayError("Couldn't start playback — is Spotcast installed and configured?");
+    } finally {
+      setPlayingId(null);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} aria-hidden />
+
+      <div
+        className="relative flex h-[80vh] w-full max-w-lg flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold text-text">Play on Living Room TV</div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-text-dim hover:bg-chip hover:text-text"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {!configured ? (
+          <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-text-dim">
+            Spotify search isn't configured — set VITE_SPOTIFY_CLIENT_ID and VITE_SPOTIFY_CLIENT_SECRET
+            (see .env.example) and rebuild.
+          </div>
+        ) : (
+          <>
+            <div className="relative">
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-text-dim"
+              />
+              <input
+                autoFocus
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search songs, artists..."
+                className="w-full rounded-xl border border-border bg-bg py-2.5 pl-9 pr-3 text-sm text-text outline-none focus:border-accent"
+              />
+            </div>
+
+            {playError && (
+              <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {playError}
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto">
+              {isEmpty ? (
+                <div className="flex h-full items-center justify-center text-sm text-text-dim">
+                  Search for something to play.
+                </div>
+              ) : loading ? (
+                <div className="flex h-full items-center justify-center text-text-dim">
+                  <Loader2 size={20} className="animate-spin" />
+                </div>
+              ) : error ? (
+                <div className="flex h-full items-center justify-center px-4 text-center text-sm text-danger">
+                  {error}
+                </div>
+              ) : results.length === 0 ? (
+                <div className="flex h-full items-center justify-center text-sm text-text-dim">
+                  No results.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  {results.map((track) => (
+                    <button
+                      key={track.id}
+                      onClick={() => play(track)}
+                      disabled={playingId === track.id}
+                      className="flex items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-chip disabled:opacity-60"
+                    >
+                      {track.albumArt ? (
+                        <img
+                          src={track.albumArt}
+                          alt=""
+                          className="h-10 w-10 shrink-0 rounded-md object-cover"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 shrink-0 rounded-md bg-chip" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium text-text">{track.name}</div>
+                        <div className="truncate text-xs text-text-dim">{track.artists}</div>
+                      </div>
+                      {playingId === track.id ? (
+                        <Loader2 size={16} className="shrink-0 animate-spin text-text-dim" />
+                      ) : (
+                        <Play size={16} className="shrink-0 text-text-dim" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

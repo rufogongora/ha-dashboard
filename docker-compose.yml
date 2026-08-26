@@ -1,6 +1,10 @@
 services:
   ha-dashboard:
-    build: .
+    build:
+      context: .
+      args:
+        VITE_SPOTIFY_CLIENT_ID: ${VITE_SPOTIFY_CLIENT_ID}
+        VITE_SPOTIFY_CLIENT_SECRET: ${VITE_SPOTIFY_CLIENT_SECRET}
     container_name: ha-dashboard
     ports:
       - "8081:80"
