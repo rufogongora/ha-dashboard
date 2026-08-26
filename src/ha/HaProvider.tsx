@@ -54,6 +54,13 @@ interface HaContextValue {
    * needs an Authorization header.
    */
   signPath: (path: string, expireSeconds?: number) => Promise<string>;
+  /**
+   * Sends a raw websocket command and returns its result — an escape hatch
+   * for custom-integration websocket APIs (e.g. Spotcast's `spotcast/player`)
+   * that don't fit the entity-state/service-call model the rest of this
+   * context covers.
+   */
+  sendMessage: <T>(message: { type: string } & Record<string, unknown>) => Promise<T>;
 }
 
 const HaContext = createContext<HaContextValue | null>(null);
@@ -192,6 +199,12 @@ export function HaProvider({ children }: { children: React.ReactNode }) {
     [hassUrl],
   );
 
+  const sendMessage = useCallback(async <T,>(message: { type: string } & Record<string, unknown>) => {
+    const conn = connectionRef.current;
+    if (!conn) throw new Error("Not connected to Home Assistant.");
+    return conn.sendMessagePromise<T>(message);
+  }, []);
+
   // Build entity_id -> area map from the registries (mirrors HA frontend logic:
   // entity's own area wins, otherwise fall back to its device's area).
   const entitiesWithArea = useMemo<Record<string, EntityWithArea>>(() => {
@@ -246,6 +259,7 @@ export function HaProvider({ children }: { children: React.ReactNode }) {
       logout,
       callService,
       signPath,
+      sendMessage,
     }),
     [
       status,
@@ -258,6 +272,7 @@ export function HaProvider({ children }: { children: React.ReactNode }) {
       logout,
       callService,
       signPath,
+      sendMessage,
     ],
   );
 

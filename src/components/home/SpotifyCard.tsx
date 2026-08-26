@@ -1,30 +1,79 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Music, Pause, Play, Volume2 } from "lucide-react";
 import { CURATED_SPOTIFY_TARGET } from "../../config/curatedHome";
 import { useHa } from "../../ha/HaProvider";
 import { SpotifySearchModal } from "./SpotifySearchModal";
 
-function resolvePicture(hassUrl: string | null, picture: string | undefined): string | null {
-  if (!picture) return null;
-  return picture.startsWith("http") ? picture : `${hassUrl ?? ""}${picture}`;
+const POLL_MS = 4000;
+
+interface SpotcastTrack {
+  name: string;
+  artists: { name: string }[];
+  album: { images: { url: string }[] };
+}
+
+interface SpotcastPlayerState {
+  is_playing?: boolean;
+  item?: SpotcastTrack;
+  device?: { volume_percent?: number; supports_volume?: boolean };
+}
+
+/**
+ * Spotcast's media_player entity is just an address for starting playback —
+ * it doesn't report its own state (confirmed live: stays off/idle regardless
+ * of what's actually playing). Real-time now-playing info only comes from
+ * Spotcast's `spotcast/player` websocket endpoint, so this polls that
+ * instead of reading the entity.
+ */
+function useSpotcastNowPlaying(): SpotcastPlayerState | null {
+  const { sendMessage } = useHa();
+  const [state, setState] = useState<SpotcastPlayerState | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+
+    async function poll() {
+      try {
+        const res = await sendMessage<{ account: string; state: SpotcastPlayerState }>({
+          type: "spotcast/player",
+        });
+        if (!cancelled) setState(res.state ?? null);
+      } catch {
+        if (!cancelled) setState(null);
+      } finally {
+        if (!cancelled) timer = setTimeout(poll, POLL_MS);
+      }
+    }
+
+    poll();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [sendMessage]);
+
+  return state;
 }
 
 export function SpotifyCard() {
-  const { entities, hassUrl, callService } = useHa();
+  const { callService } = useHa();
   const [open, setOpen] = useState(false);
+  const player = useSpotcastNowPlaying();
 
-  const player = entities[CURATED_SPOTIFY_TARGET];
-  const state = player?.state;
-  const attrs = player?.attributes ?? {};
-  const playing = state === "playing";
-  const active = playing || state === "paused";
-  const title = attrs.media_title as string | undefined;
-  const artist = attrs.media_artist as string | undefined;
-  const volume = attrs.volume_level as number | undefined;
-  const albumArt = resolvePicture(hassUrl, attrs.entity_picture as string | undefined);
+  const playing = player?.is_playing === true;
+  const track = player?.item;
+  const active = Boolean(track);
+  const volume = player?.device?.volume_percent;
+  const albumArt = track?.album.images.at(-1)?.url ?? null;
 
+  // Best-effort: Spotcast itself has no pause/volume actions (it's scoped to
+  // "start/transfer playback" only), so this falls back to the standard
+  // media_player services on its entity in case they happen to be wired up.
   function call(service: string, data: Record<string, unknown> = {}) {
-    callService("media_player", service, data, { entity_id: CURATED_SPOTIFY_TARGET }).catch(() => {});
+    callService("media_player", service, data, { entity_id: CURATED_SPOTIFY_TARGET }).catch(
+      () => {},
+    );
   }
 
   return (
@@ -50,8 +99,10 @@ export function SpotifyCard() {
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-text">{title ?? "Spotify"}</div>
-                <div className="truncate text-xs text-text-dim">{artist ?? "Tap to search"}</div>
+                <div className="truncate text-sm font-semibold text-text">{track!.name}</div>
+                <div className="truncate text-xs text-text-dim">
+                  {track!.artists.map((a) => a.name).join(", ")}
+                </div>
               </div>
             </button>
 
@@ -70,7 +121,7 @@ export function SpotifyCard() {
                     type="range"
                     min={0}
                     max={100}
-                    value={Math.round(volume * 100)}
+                    value={volume}
                     onChange={(e) =>
                       call("volume_set", { volume_level: Number(e.target.value) / 100 })
                     }
