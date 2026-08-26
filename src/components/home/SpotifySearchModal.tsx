@@ -1,13 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Play, Search, X } from "lucide-react";
-import { CURATED_SPOTIFY_TARGET } from "../../config/curatedHome";
+import { CURATED_LIVING_ROOM_TV, CURATED_SPOTIFY_TARGET } from "../../config/curatedHome";
 import { useHa } from "../../ha/HaProvider";
 import { isSpotifyConfigured, searchTracks, type SpotifyTrack } from "../../lib/spotify";
 
 const DEBOUNCE_MS = 400;
+// How long to give the TV to finish waking up before asking it to play —
+// only applied when it was actually off; skipped if it's already on.
+const TV_WAKE_MS = 3000;
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
-  const { callService } = useHa();
+  const { entities, callService } = useHa();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SpotifyTrack[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,6 +45,13 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
     setPlayingId(track.id);
     setPlayError(null);
     try {
+      const tvWasOff = entities[CURATED_LIVING_ROOM_TV]?.state === "off";
+      // The Spotcast entity can't power the TV on itself, so wake it via its
+      // own (androidtv_remote) entity first if needed, and give it a moment
+      // to actually come up before asking it to start playing.
+      await callService("media_player", "turn_on", {}, { entity_id: CURATED_LIVING_ROOM_TV });
+      if (tvWasOff) await wait(TV_WAKE_MS);
+
       // Spotcast (Mincka fork, v6) doesn't use HA's standard target
       // mechanism — the device goes inside `data.media_player.entity_id`.
       await callService("spotcast", "play_media", {

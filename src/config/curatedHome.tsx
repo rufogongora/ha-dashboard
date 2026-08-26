@@ -141,6 +141,10 @@ export const CURATED_ENERGY = {
 
 export const CURATED_WEATHER_ENTITY = "weather.forecast_home";
 
+/** The living room TV itself (androidtv_remote integration) — used to power
+ * it on before casting, since the Spotcast entity below can't do that. */
+export const CURATED_LIVING_ROOM_TV = "media_player.living_room_living_room_tv_os";
+
 /**
  * Cast target for the Spotify quick-play card, via Spotcast's
  * `spotcast.play_media` service (`data.media_player.entity_id`). This is the
@@ -169,10 +173,7 @@ function toggleIdsOf(key: string): string[] {
  * Indoor TVs — used by both "We're leaving" and "Good night". Still missing
  * the master bedroom TV as of 2026-08-26; add its entity_id here once known.
  */
-const CURATED_INDOOR_TVS: string[] = [
-  "media_player.andys_shield",
-  "media_player.living_room_living_room_tv_os",
-];
+const CURATED_INDOOR_TVS: string[] = ["media_player.andys_shield", CURATED_LIVING_ROOM_TV];
 
 /**
  * One-tap scenes shown on the Home screen's Quick Actions card. Each just
