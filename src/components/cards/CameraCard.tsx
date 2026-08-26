@@ -21,10 +21,13 @@ export function CameraCard({
   ent,
   isFavorite,
   onToggleFavorite,
+  bare,
 }: {
   ent: EntityWithArea;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
+  /** Drop the border/padding and name label — just the snapshot itself. */
+  bare?: boolean;
 }) {
   const { signPath } = useHa();
   const dead = isDead(ent);
@@ -69,16 +72,26 @@ export function CameraCard({
   return (
     <div
       className={clsx(
-        "group relative flex flex-col gap-2 overflow-hidden rounded-2xl border border-border bg-surface p-3",
+        "group relative flex flex-col gap-2",
+        bare
+          ? "overflow-hidden rounded-2xl shadow-sm"
+          : "overflow-hidden rounded-2xl border border-border bg-surface p-3",
         dead && "opacity-40",
       )}
     >
-      <div className="flex items-center gap-2 px-1">
-        <Icon size={15} className="text-text-dim" />
-        <span className="truncate text-sm font-medium text-text">{ent.friendlyName}</span>
-      </div>
+      {!bare && (
+        <div className="flex items-center gap-2 px-1">
+          <Icon size={15} className="text-text-dim" />
+          <span className="truncate text-sm font-medium text-text">{ent.friendlyName}</span>
+        </div>
+      )}
 
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black/40">
+      <div
+        className={clsx(
+          "relative aspect-video w-full overflow-hidden bg-black/40",
+          bare ? "rounded-2xl" : "rounded-xl",
+        )}
+      >
         {imgSrc && !dead ? (
           <img
             src={imgSrc}

@@ -8,6 +8,7 @@ import {
   CURATED_WEATHER_ENTITY,
 } from "../../config/curatedHome";
 import { useHa } from "../../ha/HaProvider";
+import { roomColorFor, type RoomColor } from "../../lib/roomPalette";
 import { ClimateControlModal } from "../climate/ClimateControlModal";
 import { weatherIcon } from "./statusIcons";
 
@@ -15,11 +16,13 @@ function StatusTile({
   icon: Icon,
   label,
   value,
+  color,
   onClick,
 }: {
   icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
   label: string;
   value: string;
+  color: RoomColor;
   onClick?: () => void;
 }) {
   const Tag = onClick ? "button" : "div";
@@ -27,11 +30,15 @@ function StatusTile({
     <Tag
       onClick={onClick}
       className={clsx(
-        "flex flex-1 items-center gap-3 rounded-2xl bg-surface px-4 py-3 text-left shadow-sm",
-        onClick && "cursor-pointer transition-colors hover:bg-surface-hover active:scale-[0.98]",
+        "flex flex-1 items-center gap-3 rounded-2xl px-4 py-3 text-left shadow-sm",
+        onClick && "cursor-pointer transition-[filter,transform] hover:brightness-95 active:scale-[0.98]",
       )}
+      style={{ background: color.gradient }}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-chip text-text">
+      <div
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/70"
+        style={{ color: color.accent }}
+      >
         <Icon size={18} strokeWidth={1.75} />
       </div>
       <div className="min-w-0">
@@ -64,6 +71,7 @@ export function StatusBar() {
       <StatusTile
         icon={WeatherIcon}
         label="Weather"
+        color={roomColorFor(0)}
         value={
           weather
             ? `${weatherTemp}${weatherUnit} · ${weather.state.replace(/-/g, " ")}`
@@ -73,16 +81,23 @@ export function StatusBar() {
       <StatusTile
         icon={Zap}
         label="Power"
+        color={roomColorFor(4)}
         value={
           consumption
             ? `${consumption.state}${consumption.attributes.unit_of_measurement ?? ""}`
             : "—"
         }
       />
-      <StatusTile icon={Lightbulb} label="Devices on" value={`${onCount} / ${allToggleIds.length}`} />
+      <StatusTile
+        icon={Lightbulb}
+        label="Devices on"
+        color={roomColorFor(2)}
+        value={`${onCount} / ${allToggleIds.length}`}
+      />
       <StatusTile
         icon={Thermometer}
         label="Climate"
+        color={roomColorFor(5)}
         value={
           climate
             ? `${climate.attributes.current_temperature ?? "—"}° · ${climate.state}`

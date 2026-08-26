@@ -1,17 +1,8 @@
-import {
-  Droplets,
-  Fan,
-  Flame,
-  Minus,
-  Plus,
-  Power,
-  Snowflake,
-  Thermometer,
-  X,
-} from "lucide-react";
+import { Droplets, Fan, Flame, Power, Snowflake, Thermometer, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useHa } from "../../ha/HaProvider";
 import { clsx } from "clsx";
+import { RadialDial } from "./RadialDial";
 
 const MODE_META: Record<string, { icon: LucideIcon; label: string }> = {
   off: { icon: Power, label: "Off" },
@@ -67,21 +58,19 @@ export function ClimateControlModal({
     );
   }
 
-  function adjustSingle(delta: number) {
-    if (typeof target !== "number") return;
-    const next = clampTemp(target + delta);
+  function setSingleTarget(value: number) {
     callService(
       "climate",
       "set_temperature",
-      { temperature: next },
+      { temperature: value },
       { entity_id: entityId },
     ).catch(() => {});
   }
 
-  function adjustRange(which: "low" | "high", delta: number) {
+  function setRangeTarget(which: "low" | "high", value: number) {
     if (typeof targetLow !== "number" || typeof targetHigh !== "number") return;
-    const nextLow = which === "low" ? clampTemp(targetLow + delta) : targetLow;
-    const nextHigh = which === "high" ? clampTemp(targetHigh + delta) : targetHigh;
+    const nextLow = which === "low" ? value : targetLow;
+    const nextHigh = which === "high" ? value : targetHigh;
     if (nextLow >= nextHigh) return;
     callService(
       "climate",
@@ -91,8 +80,11 @@ export function ClimateControlModal({
     ).catch(() => {});
   }
 
-  function clampTemp(value: number) {
-    return Math.min(maxTemp, Math.max(minTemp, value));
+  function dialColorFor(m: string) {
+    if (m === "cool") return "var(--color-accent)";
+    if (m === "heat") return "var(--color-warn)";
+    if (m === "heat_cool" || m === "auto") return "var(--color-ok)";
+    return "var(--color-text-dim)";
   }
 
   return (
@@ -126,37 +118,41 @@ export function ClimateControlModal({
             Turn on heat or cool to set a target
           </div>
         ) : isRange ? (
-          <div className="grid grid-cols-2 gap-3">
-            <TempStepper
-              label="Low"
-              value={targetLow}
-              onDecrease={() => adjustRange("low", -step)}
-              onIncrease={() => adjustRange("low", step)}
-            />
-            <TempStepper
-              label="High"
-              value={targetHigh}
-              onDecrease={() => adjustRange("high", -step)}
-              onIncrease={() => adjustRange("high", step)}
+          <div className="flex justify-center py-1">
+            <RadialDial
+              min={minTemp}
+              max={maxTemp}
+              step={step}
+              centerLabel={hvacAction}
+              handles={[
+                {
+                  value: targetLow!,
+                  color: "var(--color-accent)",
+                  onCommit: (v) => setRangeTarget("low", v),
+                },
+                {
+                  value: targetHigh!,
+                  color: "var(--color-warn)",
+                  onCommit: (v) => setRangeTarget("high", v),
+                },
+              ]}
             />
           </div>
         ) : typeof target === "number" ? (
-          <div className="flex items-center justify-center gap-6">
-            <button
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-chip text-text hover:bg-chip-hover active:scale-95"
-              onClick={() => adjustSingle(-step)}
-              aria-label="Decrease target temperature"
-            >
-              <Minus size={18} />
-            </button>
-            <div className="text-3xl font-semibold tabular-nums text-text">{target}°</div>
-            <button
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-chip text-text hover:bg-chip-hover active:scale-95"
-              onClick={() => adjustSingle(step)}
-              aria-label="Increase target temperature"
-            >
-              <Plus size={18} />
-            </button>
+          <div className="flex justify-center py-1">
+            <RadialDial
+              min={minTemp}
+              max={maxTemp}
+              step={step}
+              centerLabel={hvacAction}
+              handles={[
+                {
+                  value: target,
+                  color: dialColorFor(mode),
+                  onCommit: setSingleTarget,
+                },
+              ]}
+            />
           </div>
         ) : null}
 
@@ -212,41 +208,6 @@ export function ClimateControlModal({
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-function TempStepper({
-  label,
-  value,
-  onDecrease,
-  onIncrease,
-}: {
-  label: string;
-  value: number;
-  onDecrease: () => void;
-  onIncrease: () => void;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-2 rounded-xl bg-chip py-3">
-      <div className="text-[11px] font-medium uppercase tracking-wide text-text-dim">{label}</div>
-      <div className="text-xl font-semibold tabular-nums text-text">{value}°</div>
-      <div className="flex items-center gap-2">
-        <button
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-text hover:bg-surface-hover active:scale-95"
-          onClick={onDecrease}
-          aria-label={`Decrease ${label.toLowerCase()} target`}
-        >
-          <Minus size={14} />
-        </button>
-        <button
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-text hover:bg-surface-hover active:scale-95"
-          onClick={onIncrease}
-          aria-label={`Increase ${label.toLowerCase()} target`}
-        >
-          <Plus size={14} />
-        </button>
       </div>
     </div>
   );

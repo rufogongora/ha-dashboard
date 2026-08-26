@@ -31,7 +31,7 @@ export function CameraWall() {
               deviceId: null,
               friendlyName: cam.label,
             };
-        return <CameraCard key={cam.entityId} ent={ent} />;
+        return <CameraCard key={cam.entityId} ent={ent} bare />;
       })}
     </div>
   );
