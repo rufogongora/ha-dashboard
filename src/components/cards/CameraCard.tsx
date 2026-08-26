@@ -1,21 +1,21 @@
 import { RefreshCw, Star, VideoOff } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import type { EntityWithArea } from "../../ha/types";
 import { useHa } from "../../ha/HaProvider";
 import { isDead } from "../../lib/entityHelpers";
 import { iconFor } from "../../lib/icons";
 
-const REFRESH_MS = 6000;
+const RETRY_MS = 5000;
 
 /**
- * Refreshes a camera snapshot by asking Home Assistant to sign the
- * camera_proxy path (the same "auth/sign_path" mechanism HA's own frontend
- * uses) and dropping the result straight into an <img src>. Browsers don't
- * apply CORS to plain image loads, so this works out of the box with no
- * Home Assistant config changes — unlike a fetch()-based approach, which
- * needs cors_allowed_origins set. Not a live stream, just a still image
- * refreshed every few seconds — good enough for a glance on a wall tablet.
+ * True live view: signs Home Assistant's camera_proxy_stream path (the
+ * generic MJPEG multipart stream every HA camera entity exposes, the same
+ * "auth/sign_path" mechanism HA's own frontend uses) and drops it straight
+ * into an <img src> — browsers render a multipart MJPEG response as a
+ * continuously-updating image with zero extra code, no polling loop needed.
+ * If the stream drops (HA restart, network blip), the <img>'s onError fires
+ * and we re-sign a fresh URL after a short delay.
  */
 export function CameraCard({
   ent,
@@ -43,31 +43,31 @@ export function CameraCard({
     };
   }, []);
 
+  const connect = useCallback(async () => {
+    try {
+      const url = await signPath(`/api/camera_proxy_stream/${ent.entityId}`, 30);
+      if (mountedRef.current) {
+        setImgSrc(url);
+        setErrored(false);
+      }
+    } catch {
+      if (mountedRef.current) setErrored(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ent.entityId]);
+
   useEffect(() => {
     if (dead) return;
-    let timer: ReturnType<typeof setTimeout>;
+    connect();
+  }, [connect, dead]);
 
-    async function refresh() {
-      try {
-        const url = await signPath(
-          `/api/camera_proxy/${ent.entityId}`,
-          Math.ceil(REFRESH_MS / 1000) + 15,
-        );
-        if (mountedRef.current) {
-          setImgSrc(url);
-          setErrored(false);
-        }
-      } catch {
-        if (mountedRef.current) setErrored(true);
-      } finally {
-        if (mountedRef.current) timer = setTimeout(refresh, REFRESH_MS);
-      }
-    }
-
-    refresh();
+  // Self-heals if the stream drops: onError below flips `errored`, which
+  // schedules one reconnect attempt here.
+  useEffect(() => {
+    if (!errored || dead) return;
+    const timer = setTimeout(connect, RETRY_MS);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ent.entityId, dead]);
+  }, [errored, dead, connect]);
 
   return (
     <div
@@ -106,7 +106,7 @@ export function CameraCard({
         )}
         {errored && !dead && (
           <div className="absolute bottom-1.5 right-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-warn">
-            snapshot unavailable
+stream unavailable
           </div>
         )}
       </div>

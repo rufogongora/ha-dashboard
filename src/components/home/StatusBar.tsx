@@ -30,10 +30,10 @@ function StatusTile({
     <Tag
       onClick={onClick}
       className={clsx(
-        "flex flex-1 items-center gap-3 rounded-2xl px-4 py-3 text-left shadow-sm",
+        "flex flex-1 items-center gap-3 rounded-2xl border border-white/40 px-4 py-3 text-left shadow-sm backdrop-blur-md",
         onClick && "cursor-pointer transition-[filter,transform] hover:brightness-95 active:scale-[0.98]",
       )}
-      style={{ background: color.gradient }}
+      style={{ background: color.glass }}
     >
       <div
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/70"

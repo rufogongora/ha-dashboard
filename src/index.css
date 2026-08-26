@@ -67,3 +67,156 @@ input[type="range"]::-moz-range-thumb {
   border: 2px solid #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
+
+/* Home screen weather background — a fixed, decorative sky behind the
+ * (semi-transparent) room/status cards, reflecting current condition + time
+ * of day. Pure CSS (gradients + tiled dot/streak patterns), no images, so it
+ * stays lightweight and needs no network fetch. */
+.wxbg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: background 1.5s ease;
+}
+
+.wxbg__stars {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(white 1px, transparent 1.5px);
+  background-size: 46px 46px;
+  animation: wxbg-twinkle 4s ease-in-out infinite;
+}
+
+.wxbg__glow {
+  position: absolute;
+  top: 8%;
+  right: 12%;
+  width: 140px;
+  height: 140px;
+  border-radius: 9999px;
+  filter: blur(2px);
+}
+
+.wxbg__cloud {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(18px);
+  animation: wxbg-drift linear infinite;
+}
+
+.wxbg__rain {
+  position: absolute;
+  inset: -20% -10%;
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.35) 0px,
+    rgba(255, 255, 255, 0.35) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+  animation: wxbg-fall 0.45s linear infinite;
+}
+
+.wxbg__snow {
+  position: absolute;
+  inset: -10%;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.85) 1.5px, transparent 2px);
+  background-size: 38px 38px;
+  animation: wxbg-snowfall 9s linear infinite;
+}
+
+.wxbg__lightning {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  animation: wxbg-flash 7s ease-in-out infinite;
+}
+
+.wxbg__bolt {
+  position: absolute;
+  top: 14%;
+  left: 58%;
+  opacity: 0;
+  animation: wxbg-flash 7s ease-in-out infinite;
+}
+
+.wxbg__mist {
+  position: absolute;
+  inset: -10%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  animation: wxbg-drift-slow 18s linear infinite;
+}
+
+@keyframes wxbg-twinkle {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes wxbg-drift {
+  from {
+    transform: translateX(-6%);
+  }
+  to {
+    transform: translateX(6%);
+  }
+}
+
+@keyframes wxbg-drift-slow {
+  from {
+    transform: translateX(-30%);
+  }
+  to {
+    transform: translateX(30%);
+  }
+}
+
+@keyframes wxbg-fall {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -14px 24px;
+  }
+}
+
+@keyframes wxbg-snowfall {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 12px 260px;
+  }
+}
+
+@keyframes wxbg-flash {
+  0%,
+  92%,
+  96%,
+  100% {
+    opacity: 0;
+  }
+  93%,
+  95% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wxbg__stars,
+  .wxbg__cloud,
+  .wxbg__rain,
+  .wxbg__snow,
+  .wxbg__lightning,
+  .wxbg__bolt,
+  .wxbg__mist {
+    animation: none;
+  }
+}

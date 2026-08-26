@@ -17,8 +17,8 @@ export function RoomCard({ room, index }: { room: CuratedRoom; index: number }) 
 
   return (
     <div
-      className="relative flex items-stretch justify-between gap-3 overflow-hidden rounded-3xl p-5"
-      style={{ background: color.gradient }}
+      className="relative flex items-stretch justify-between gap-3 overflow-hidden rounded-3xl border border-white/40 p-5 shadow-sm backdrop-blur-md"
+      style={{ background: color.glass }}
     >
       <div className="flex min-w-0 flex-1 flex-col justify-between">
         <Link

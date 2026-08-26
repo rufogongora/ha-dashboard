@@ -1,6 +1,9 @@
 import {
+  DoorOpen,
   Fan,
   Lightbulb,
+  Moon,
+  PartyPopper,
   Refrigerator,
   Sparkles,
   type LucideIcon,
@@ -26,6 +29,9 @@ export interface CuratedRoom {
   name: string;
   illustration: RoomIllustrationKey;
   toggles: CuratedToggle[];
+  /** Outdoor/exterior room — excluded from "indoor" quick actions like
+   * "We're leaving". */
+  external?: boolean;
 }
 
 export interface CuratedCamera {
@@ -84,6 +90,7 @@ export const CURATED_ROOMS: CuratedRoom[] = [
     key: "driveway",
     name: "Driveway",
     illustration: "driveway",
+    external: true,
     toggles: [
       { entityId: "switch.main_entrance_lights_switch", label: "Entrance", icon: Lightbulb },
     ],
@@ -98,6 +105,7 @@ export const CURATED_ROOMS: CuratedRoom[] = [
     key: "backyard",
     name: "Backyard",
     illustration: "backyard",
+    external: true,
     toggles: [
       { entityId: "switch.backyard_door_light", label: "Door Light", icon: Lightbulb },
       {
@@ -132,3 +140,57 @@ export const CURATED_ENERGY = {
 };
 
 export const CURATED_WEATHER_ENTITY = "weather.forecast_home";
+
+export interface QuickAction {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  /** Whether pressing it turns its entities on or off. */
+  action: "turn_on" | "turn_off";
+  entityIds: string[];
+}
+
+function toggleIdsOf(key: string): string[] {
+  return CURATED_ROOMS.find((r) => r.key === key)?.toggles.map((t) => t.entityId) ?? [];
+}
+
+/**
+ * One-tap scenes shown on the Home screen's Quick Actions card. Each just
+ * bulk turn_on/turn_off's a list of entities via the generic `homeassistant`
+ * domain service (works across light/switch/fan regardless of which one a
+ * given entity actually is).
+ */
+export const CURATED_QUICK_ACTIONS: QuickAction[] = [
+  {
+    key: "leaving",
+    label: "We're leaving",
+    icon: DoorOpen,
+    action: "turn_off",
+    // Every indoor room's lights/fans — driveway and backyard (external:
+    // true) are left alone, since you'd still want those on while out.
+    entityIds: CURATED_ROOMS.filter((r) => !r.external).flatMap((r) =>
+      r.toggles.map((t) => t.entityId),
+    ),
+  },
+  {
+    key: "party",
+    label: "Party",
+    icon: PartyPopper,
+    action: "turn_on",
+    entityIds: toggleIdsOf("backyard"),
+  },
+  {
+    key: "good_night",
+    label: "Good night",
+    icon: Moon,
+    action: "turn_off",
+    entityIds: [
+      ...toggleIdsOf("kitchen"),
+      ...toggleIdsOf("living_room"),
+      ...toggleIdsOf("dining_room"),
+      // TODO: add your TV media_player entity IDs here, e.g.
+      // "media_player.living_room_tv" — not in curatedHome.tsx yet since
+      // no TVs are configured as curated entities.
+    ],
+  },
+];
