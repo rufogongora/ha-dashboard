@@ -61,8 +61,8 @@ server, in this project's directory:
 docker compose up -d --build
 ```
 
-That builds the React app and serves it via nginx on **port 8080**. Visit
-`http://<your-server-ip>:8080` and log in with the same URL + token as
+That builds the React app and serves it via nginx on **port 8081**. Visit
+`http://<your-server-ip>:8081` and log in with the same URL + token as
 above (credentials are stored in the browser's localStorage, not baked
 into the image, so the same image works for anyone on your network).
 
@@ -78,7 +78,7 @@ services:
     build: ./ha-dashboard
     container_name: ha-dashboard
     ports:
-      - "8080:80"
+      - "8081:80"
     restart: unless-stopped
 ```
 
@@ -88,7 +88,7 @@ Then `docker compose up -d --build ha-dashboard` from your stack's root.
 
 If you put this behind Nginx Proxy Manager, Traefik, Caddy, etc. (recommended
 if you want to reach it from outside your LAN), the proxy only needs to
-forward plain HTTP to port 8080 on this container — nothing special, since
+forward plain HTTP to port 8081 on this container — nothing special, since
 the container itself doesn't talk to Home Assistant at all.
 
 The one thing to get right is on the *Home Assistant* side: if you access
