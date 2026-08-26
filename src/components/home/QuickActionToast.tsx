@@ -60,20 +60,20 @@ export function QuickActionToast({
 
       <div
         className={clsx(
-          "relative flex w-full max-w-sm flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-6 text-center shadow-xl transition-all",
+          "relative flex w-full max-w-lg flex-col items-center gap-4 rounded-3xl border border-border bg-surface p-10 text-center shadow-xl transition-all",
           visible && !closing ? "scale-100 opacity-100" : "scale-90 opacity-0",
         )}
         style={{ transitionDuration: `${FADE_MS}ms` }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-chip text-text">
-          <action.icon size={22} strokeWidth={1.75} />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-chip text-text">
+          <action.icon size={30} strokeWidth={1.75} />
         </div>
-        <div className="text-base font-semibold text-text">{action.label}</div>
-        <p className="text-sm text-text-dim">{action.description}</p>
+        <div className="text-2xl font-semibold text-text">{action.label}</div>
+        <p className="text-lg text-text-dim">{action.description}</p>
         <button
           onClick={close}
-          className="mt-1 rounded-full bg-chip px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-chip-hover"
+          className="mt-2 rounded-full bg-chip px-6 py-3 text-base font-medium text-text transition-colors hover:bg-chip-hover"
         >
           Dismiss
         </button>
