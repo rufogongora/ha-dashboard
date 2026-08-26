@@ -35,7 +35,7 @@ export function RoomCard({ room, index }: { room: CuratedRoom; index: number }) 
         />
       </div>
 
-      <div className="flex w-[104px] flex-wrap content-start justify-end gap-2">
+      <div className="flex w-[144px] flex-wrap content-start justify-end gap-2">
         {room.toggles.map((toggle_) => {
           const state = entities[toggle_.entityId]?.state;
           const unavailable = state === undefined || state === "unavailable";

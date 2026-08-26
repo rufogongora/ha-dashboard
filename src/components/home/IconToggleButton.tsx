@@ -16,17 +16,19 @@ export function IconToggleButton({
   return (
     <button
       onClick={onClick}
-      aria-label={label}
       aria-pressed={on}
       title={label}
-      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl shadow-sm transition-transform active:scale-95"
+      className="flex w-[68px] shrink-0 flex-col items-center gap-1 rounded-2xl px-1.5 py-2 shadow-sm transition-transform active:scale-95"
       style={
         on
           ? { backgroundColor: accent, color: "#fff" }
           : { backgroundColor: "rgba(255,255,255,0.75)", color: accent }
       }
     >
-      <Icon size={22} strokeWidth={2} />
+      <Icon size={24} strokeWidth={2} />
+      <span className="w-full truncate text-center text-[10px] font-medium leading-tight">
+        {label}
+      </span>
     </button>
   );
 }
