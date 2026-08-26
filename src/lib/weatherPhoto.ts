@@ -17,7 +17,15 @@ const KEYWORDS: Record<WeatherThemeGroup, [day: string, night: string]> = {
   wind: ["windy,clouds,sky", "windy,night,clouds"],
 };
 
-export function weatherPhotoUrl(group: WeatherThemeGroup, isNight: boolean): string {
+/** Requesting the photo at the screen's actual pixel size (rather than a
+ * fixed size) is what keeps loremflickr's server-side resize from stretching
+ * a source photo with a different aspect ratio to fit. */
+export function weatherPhotoUrl(
+  group: WeatherThemeGroup,
+  isNight: boolean,
+  width: number,
+  height: number,
+): string {
   const tags = KEYWORDS[group][isNight ? 1 : 0];
-  return `https://loremflickr.com/1600/900/${tags}`;
+  return `https://loremflickr.com/${width}/${height}/${tags}`;
 }

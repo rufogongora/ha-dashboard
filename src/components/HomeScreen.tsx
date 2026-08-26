@@ -25,7 +25,7 @@ export function HomeScreen() {
       <WeatherBackground condition={weather?.state} isNight={isNight} />
 
       <div className="relative z-10 flex h-full flex-col">
-        <Header title="Home" subtitle={`${CURATED_ROOMS.length} rooms`} />
+        <Header title="Home" subtitle={`${CURATED_ROOMS.length} rooms`} glass />
         <div className="flex-1 overflow-y-auto p-6">
           <div className="flex flex-col gap-6">
             <StatusBar />
