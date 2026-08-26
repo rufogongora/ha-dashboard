@@ -142,7 +142,11 @@ stream unavailable
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
           onClick={() => setFullscreen(false)}
         >
-          <img src={imgSrc} alt={ent.friendlyName} className="max-h-full max-w-full rounded-xl object-contain" />
+          <img
+            src={imgSrc}
+            alt={ent.friendlyName}
+            className="h-[80vh] w-[80vw] rounded-xl object-contain"
+          />
           <button
             onClick={() => setFullscreen(false)}
             aria-label="Exit fullscreen"
