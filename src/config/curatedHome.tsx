@@ -144,6 +144,22 @@ export const CURATED_ENERGY = {
 
 export const CURATED_WEATHER_ENTITY = "weather.forecast_home";
 
+export interface CuratedDoorSensor {
+  entityId: string;
+  label: string;
+}
+
+/** Door/opening binary_sensors watched by DoorAlertMonitor — "on" = open. */
+export const CURATED_DOOR_SENSORS: CuratedDoorSensor[] = [
+  { entityId: "binary_sensor.front_door_sensor", label: "Front Door" },
+  { entityId: "binary_sensor.back_door_sensor", label: "Back Door" },
+  { entityId: "binary_sensor.garage_door_sensor", label: "Garage Door" },
+  { entityId: "binary_sensor.print_room_garage_door", label: "Print Room Garage Door" },
+];
+
+/** How long a door can stay open before DoorAlertMonitor fires. */
+export const DOOR_ALERT_THRESHOLD_MS = 2 * 60 * 1000;
+
 /** The living room TV itself (androidtv_remote integration) — used to power
  * it on before casting, since the Spotcast entity below can't do that. */
 export const CURATED_LIVING_ROOM_TV = "media_player.living_room_living_room_tv_os";

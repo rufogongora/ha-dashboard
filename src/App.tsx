@@ -1,8 +1,10 @@
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import { useHa } from "./ha/HaProvider";
+import { primeAudio } from "./lib/alarmSound";
 import { AreaPage } from "./components/AreaPage";
+import { DoorAlertMonitor } from "./components/DoorAlertMonitor";
 import { HomeScreen } from "./components/HomeScreen";
 import { Login } from "./components/Login";
 import { OverviewPage } from "./components/OverviewPage";
@@ -12,6 +14,18 @@ import { SettingsPage } from "./components/SettingsPage";
 function App() {
   const { status } = useHa();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Primes the door-alert AudioContext on the first real tap anywhere in the
+  // app, so a later programmatic (non-gesture) alarm play() isn't blocked by
+  // the browser's autoplay policy.
+  useEffect(() => {
+    function onFirstInteraction() {
+      primeAudio();
+      window.removeEventListener("pointerdown", onFirstInteraction);
+    }
+    window.addEventListener("pointerdown", onFirstInteraction);
+    return () => window.removeEventListener("pointerdown", onFirstInteraction);
+  }, []);
 
   if (status !== "connected") {
     return <Login />;
@@ -38,6 +52,8 @@ function App() {
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </main>
+
+      <DoorAlertMonitor />
     </div>
   );
 }
