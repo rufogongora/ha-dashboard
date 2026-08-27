@@ -1,10 +1,9 @@
-import { CURATED_QUICK_ACTIONS, CURATED_ROOMS, CURATED_WEATHER_ENTITY } from "../config/curatedHome";
+import { CURATED_ROOMS, CURATED_WEATHER_ENTITY } from "../config/curatedHome";
 import { useHa } from "../ha/HaProvider";
 import { isNightFor } from "../lib/weatherTheme";
+import { CameraSidebar } from "./home/CameraSidebar";
 import { CameraWall } from "./home/CameraWall";
-import { QuickActionsCard } from "./home/QuickActionsCard";
 import { RoomCard } from "./home/RoomCard";
-import { SpotifyCard } from "./home/SpotifyCard";
 import { StatusBar } from "./home/StatusBar";
 import { WeatherBackground } from "./home/WeatherBackground";
 import { Header } from "./Header";
@@ -31,12 +30,21 @@ export function HomeScreen() {
           <div className="flex flex-col gap-6">
             <StatusBar />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {CURATED_ROOMS.map((room, i) => (
-                <RoomCard key={room.key} room={room} index={i} />
-              ))}
-              <QuickActionsCard actions={CURATED_QUICK_ACTIONS} />
-              <SpotifyCard />
+            {/* Rooms fill a 2-column grid on the left; the camera sidebar is
+                a flex sibling on the right, which stretches to match the
+                room grid's full (auto) height for free — a spanning grid
+                item can't do this reliably, since `grid-row: 1 / -1` only
+                resolves against the *explicit* grid, not rows the room
+                cards create implicitly via auto-flow. */}
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <div className="grid grid-cols-2 gap-4 sm:flex-[2]">
+                {CURATED_ROOMS.map((room, i) => (
+                  <RoomCard key={room.key} room={room} index={i} />
+                ))}
+              </div>
+              <div className="flex sm:flex-1">
+                <CameraSidebar />
+              </div>
             </div>
 
             <section>

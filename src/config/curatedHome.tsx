@@ -37,6 +37,9 @@ export interface CuratedRoom {
 export interface CuratedCamera {
   entityId: string;
   label: string;
+  /** Shown in the vertical sidebar column next to the room grid, instead of
+   * the "Cameras" wall further down the page. */
+  sidebar?: boolean;
 }
 
 /**
@@ -123,9 +126,9 @@ export const CURATED_ROOMS: CuratedRoom[] = [
 ];
 
 export const CURATED_CAMERAS: CuratedCamera[] = [
-  { entityId: "camera.driveway_medium", label: "Driveway" },
-  { entityId: "camera.g4_doorbell_pro_medium", label: "Front Doorbell" },
-  { entityId: "camera.backyard_medium_resolution_channel", label: "Backyard" },
+  { entityId: "camera.driveway_medium", label: "Driveway", sidebar: true },
+  { entityId: "camera.g4_doorbell_pro_medium", label: "Front Doorbell", sidebar: true },
+  { entityId: "camera.backyard_medium_resolution_channel", label: "Backyard", sidebar: true },
   { entityId: "camera.backyard_east_medium_resolution_channel", label: "Backyard East" },
   { entityId: "camera.backyard_west_medium_resolution_channel", label: "Backyard West" },
   { entityId: "camera.g3_flex_high_4", label: "Flex Cam" },

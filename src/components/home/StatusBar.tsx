@@ -1,16 +1,28 @@
-import { Lightbulb, Thermometer, Zap } from "lucide-react";
+import { ListChecks, Music, Thermometer, Zap } from "lucide-react";
 import { useState } from "react";
 import clsx from "clsx";
 import {
   CURATED_CLIMATE_ENTITY,
   CURATED_ENERGY,
-  CURATED_ROOMS,
+  CURATED_QUICK_ACTIONS,
   CURATED_WEATHER_ENTITY,
+  type QuickAction,
 } from "../../config/curatedHome";
 import { useHa } from "../../ha/HaProvider";
-import { roomColorFor, type RoomColor } from "../../lib/roomPalette";
+import type { RoomColor } from "../../lib/roomPalette";
+import { roomColorFor } from "../../lib/roomPalette";
 import { ClimateControlModal } from "../climate/ClimateControlModal";
+import { QuickActionToast } from "./QuickActionToast";
+import { QuickActionsModal } from "./QuickActionsModal";
+import { SpotifySearchModal } from "./SpotifySearchModal";
 import { weatherIcon } from "./statusIcons";
+import { useSpotifyNowPlaying } from "./useSpotifyNowPlaying";
+
+const SPOTIFY_COLOR: RoomColor = {
+  gradient: "linear-gradient(135deg, #1DB954, #169c46)",
+  glass: "linear-gradient(135deg, rgba(29,185,84,0.35), rgba(29,185,84,0.15))",
+  accent: "#1DB954",
+};
 
 function StatusTile({
   icon: Icon,
@@ -52,22 +64,37 @@ function StatusTile({
 }
 
 export function StatusBar() {
-  const { entities } = useHa();
+  const { entities, callService } = useHa();
   const [climateOpen, setClimateOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [spotifyOpen, setSpotifyOpen] = useState(false);
+  const [toastAction, setToastAction] = useState<QuickAction | null>(null);
+  // Bumped on every tap so re-tapping the same action while its toast is
+  // already showing remounts QuickActionToast (fresh animation + timer)
+  // instead of silently reusing the still-running one.
+  const [toastNonce, setToastNonce] = useState(0);
 
   const weather = entities[CURATED_WEATHER_ENTITY];
   const climate = entities[CURATED_CLIMATE_ENTITY];
   const consumption = entities[CURATED_ENERGY.consumption];
-
-  const allToggleIds = CURATED_ROOMS.flatMap((r) => r.toggles.map((t) => t.entityId));
-  const onCount = allToggleIds.filter((id) => entities[id]?.state === "on").length;
+  const spotifyTrack = useSpotifyNowPlaying()?.item;
 
   const WeatherIcon = weatherIcon(weather?.state);
   const weatherTemp = weather?.attributes.temperature;
   const weatherUnit = weather?.attributes.temperature_unit ?? "°";
 
+  function runAction(action: QuickAction) {
+    if (action.entityIds.length === 0) return;
+    callService("homeassistant", action.action, {}, { entity_id: action.entityIds }).catch(
+      () => {},
+    );
+    setActionsOpen(false);
+    setToastAction(action);
+    setToastNonce((n) => n + 1);
+  }
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
       <StatusTile
         icon={WeatherIcon}
         label="Weather"
@@ -89,10 +116,11 @@ export function StatusBar() {
         }
       />
       <StatusTile
-        icon={Lightbulb}
-        label="Devices on"
+        icon={ListChecks}
+        label="Quick Actions"
         color={roomColorFor(2)}
-        value={`${onCount} / ${allToggleIds.length}`}
+        value="Leaving · Party · Night"
+        onClick={() => setActionsOpen(true)}
       />
       <StatusTile
         icon={Thermometer}
@@ -105,11 +133,40 @@ export function StatusBar() {
         }
         onClick={climate ? () => setClimateOpen(true) : undefined}
       />
+      <StatusTile
+        icon={Music}
+        label="Spotify"
+        color={SPOTIFY_COLOR}
+        value={
+          spotifyTrack
+            ? `${spotifyTrack.name} · ${spotifyTrack.artists.map((a) => a.name).join(", ")}`
+            : "Tap to play"
+        }
+        onClick={() => setSpotifyOpen(true)}
+      />
 
       {climateOpen && climate && (
         <ClimateControlModal
           entityId={CURATED_CLIMATE_ENTITY}
           onClose={() => setClimateOpen(false)}
+        />
+      )}
+
+      {actionsOpen && (
+        <QuickActionsModal
+          actions={CURATED_QUICK_ACTIONS}
+          onSelect={runAction}
+          onClose={() => setActionsOpen(false)}
+        />
+      )}
+
+      {spotifyOpen && <SpotifySearchModal onClose={() => setSpotifyOpen(false)} />}
+
+      {toastAction && (
+        <QuickActionToast
+          key={`${toastAction.key}-${toastNonce}`}
+          action={toastAction}
+          onDismiss={() => setToastAction(null)}
         />
       )}
     </div>

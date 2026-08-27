@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Play, Search, X } from "lucide-react";
+import { Loader2, Music, Pause, Play, Search, Volume2, X } from "lucide-react";
 import { CURATED_LIVING_ROOM_TV, CURATED_SPOTIFY_TARGET } from "../../config/curatedHome";
 import { useHa } from "../../ha/HaProvider";
 import { isSpotifyConfigured, searchTracks, type SpotifyTrack } from "../../lib/spotify";
+import { useSpotifyNowPlaying } from "./useSpotifyNowPlaying";
 
 const DEBOUNCE_MS = 400;
 // How long to give the TV to finish waking up before asking it to play —
@@ -23,6 +24,21 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
   const [playError, setPlayError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const configured = isSpotifyConfigured();
+
+  const player = useSpotifyNowPlaying();
+  const track = player?.item;
+  const playing = player?.is_playing === true;
+  const volume = player?.device?.volume_percent;
+  const albumArt = track?.album.images.at(-1)?.url ?? null;
+
+  // Best-effort: Spotcast itself has no pause/volume actions (it's scoped to
+  // "start/transfer playback" only), so this falls back to the standard
+  // media_player services on its entity in case they happen to be wired up.
+  function controlCall(service: string, data: Record<string, unknown> = {}) {
+    callService("media_player", service, data, { entity_id: CURATED_SPOTIFY_TARGET }).catch(
+      () => {},
+    );
+  }
 
   const isEmpty = !query.trim();
 
@@ -83,6 +99,46 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
             <X size={16} />
           </button>
         </div>
+
+        {track && (
+          <div className="flex items-center gap-3 rounded-2xl bg-chip p-3">
+            {albumArt ? (
+              <img src={albumArt} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+            ) : (
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface text-[#1DB954]">
+                <Music size={18} strokeWidth={1.75} />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-text">{track.name}</div>
+              <div className="truncate text-xs text-text-dim">
+                {track.artists.map((a) => a.name).join(", ")}
+              </div>
+            </div>
+            <button
+              onClick={() => controlCall(playing ? "media_pause" : "media_play")}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-text shadow-sm hover:bg-surface-hover active:scale-95"
+              aria-label={playing ? "Pause" : "Play"}
+            >
+              {playing ? <Pause size={16} /> : <Play size={16} />}
+            </button>
+            {typeof volume === "number" && (
+              <div className="flex w-20 shrink-0 items-center gap-1.5">
+                <Volume2 size={13} className="shrink-0 text-text-dim" />
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={volume}
+                  onChange={(e) =>
+                    controlCall("volume_set", { volume_level: Number(e.target.value) / 100 })
+                  }
+                  className="flex-1"
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         {!configured ? (
           <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-text-dim">

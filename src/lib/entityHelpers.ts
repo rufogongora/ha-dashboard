@@ -1,3 +1,4 @@
+import type { CuratedCamera } from "../config/curatedHome";
 import type { EntityWithArea } from "../ha/types";
 
 /** States that mean "this entity isn't giving us anything useful right now". */
@@ -57,4 +58,32 @@ export function deviceClassLabel(ent: EntityWithArea): string | null {
 
 export function sortByName(a: EntityWithArea, b: EntityWithArea): number {
   return a.friendlyName.localeCompare(b.friendlyName);
+}
+
+/** Resolves a curated camera entry to a real entity, using the curated label
+ * instead of whatever raw name HA reports, and falling back to a synthetic
+ * "unavailable" entity if it isn't found yet (e.g. camera not yet set up) so
+ * the tile still renders cleanly. */
+export function resolveCuratedCamera(
+  entitiesWithArea: Record<string, EntityWithArea>,
+  cam: CuratedCamera,
+): EntityWithArea {
+  const found = entitiesWithArea[cam.entityId];
+  if (found) return { ...found, friendlyName: cam.label };
+  return {
+    entity: {
+      entity_id: cam.entityId,
+      state: "unavailable",
+      attributes: {},
+      context: { id: "", parent_id: null, user_id: null },
+      last_changed: "",
+      last_updated: "",
+    },
+    entityId: cam.entityId,
+    domain: "camera",
+    areaId: null,
+    areaName: null,
+    deviceId: null,
+    friendlyName: cam.label,
+  };
 }

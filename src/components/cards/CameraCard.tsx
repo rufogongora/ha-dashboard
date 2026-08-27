@@ -22,12 +22,16 @@ export function CameraCard({
   isFavorite,
   onToggleFavorite,
   bare,
+  fill,
 }: {
   ent: EntityWithArea;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
   /** Drop the border/padding and name label — just the snapshot itself. */
   bare?: boolean;
+  /** Fill the parent's height instead of a fixed 16:9 box (for a vertical
+   * stack where each tile gets an equal flex share of the column height). */
+  fill?: boolean;
 }) {
   const { signPath } = useHa();
   const dead = isDead(ent);
@@ -73,7 +77,8 @@ export function CameraCard({
   return (
     <div
       className={clsx(
-        "group relative flex flex-col gap-2",
+        "group relative flex min-h-0 flex-col gap-2",
+        fill && "flex-1",
         bare
           ? "overflow-hidden rounded-2xl shadow-sm"
           : "overflow-hidden rounded-2xl border border-border bg-surface p-3",
@@ -89,7 +94,8 @@ export function CameraCard({
 
       <div
         className={clsx(
-          "relative aspect-video w-full overflow-hidden bg-black/40",
+          "relative w-full overflow-hidden bg-black/40",
+          fill ? "min-h-0 flex-1" : "aspect-video",
           bare ? "rounded-2xl" : "rounded-xl",
           imgSrc && !dead && "cursor-pointer",
         )}
