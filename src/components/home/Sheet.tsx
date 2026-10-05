@@ -1,9 +1,15 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 /**
  * Detail pop-up for a status tile: a bottom sheet on phones, a centered
  * panel on wider screens. Scrolls internally so long logs stay inside it.
+ *
+ * Rendered through a portal into the screen's root ([data-sheet-root], set
+ * by HomeScreen/PhoneScreen) so a sheet opened from inside a glass card
+ * isn't trapped by the card's backdrop-filter (which makes position:fixed
+ * relative to the card) while still inheriting the night-mode tokens.
  */
 export function Sheet({
   title,
@@ -24,7 +30,7 @@ export function Sheet({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
 
@@ -51,7 +57,8 @@ export function Sheet({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.querySelector("[data-sheet-root]") ?? document.body,
   );
 }
 

@@ -29,6 +29,9 @@ export interface CuratedRoom {
   name: string;
   illustration: RoomIllustrationKey;
   toggles: CuratedToggle[];
+  /** The room's Hue group light (light.<room>, is_hue_group) — adds a "Hue"
+   * chip that opens brightness, colors, scenes and per-bulb control. */
+  lights?: string;
   /** Outdoor/exterior room — excluded from "indoor" quick actions like
    * "We're leaving". */
   external?: boolean;
@@ -63,6 +66,7 @@ export const CURATED_ROOMS: CuratedRoom[] = [
     key: "living_room",
     name: "Living Room",
     illustration: "livingRoom",
+    lights: "light.living_room",
     toggles: [
       { entityId: "switch.living_room_candelabra", label: "Candelabra", icon: Sparkles },
       { entityId: "switch.living_room_entrance_light", label: "Entrance", icon: Lightbulb },
@@ -74,6 +78,7 @@ export const CURATED_ROOMS: CuratedRoom[] = [
     key: "office",
     name: "Office",
     illustration: "office",
+    lights: "light.office",
     toggles: [
       { entityId: "switch.office_fan", label: "Fan", icon: Fan },
       { entityId: "switch.office_lights", label: "Lights", icon: Lightbulb },
@@ -83,6 +88,7 @@ export const CURATED_ROOMS: CuratedRoom[] = [
     key: "bedroom",
     name: "Bedroom",
     illustration: "bedroom",
+    lights: "light.bedroom",
     toggles: [
       { entityId: "switch.bedroom_fan_lights_switch", label: "Fan Light", icon: Lightbulb },
       { entityId: "switch.bedroom_fan_switch", label: "Fan", icon: Fan },
@@ -93,6 +99,7 @@ export const CURATED_ROOMS: CuratedRoom[] = [
     key: "driveway",
     name: "Driveway",
     illustration: "driveway",
+    lights: "light.driveway",
     external: true,
     toggles: [
       { entityId: "switch.main_entrance_lights_switch", label: "Entrance", icon: Lightbulb },
@@ -108,6 +115,7 @@ export const CURATED_ROOMS: CuratedRoom[] = [
     key: "backyard",
     name: "Backyard",
     illustration: "backyard",
+    lights: "light.east_backyard",
     external: true,
     toggles: [
       { entityId: "switch.backyard_door_light", label: "Door Light", icon: Lightbulb },
@@ -135,6 +143,68 @@ export const CURATED_CAMERAS: CuratedCamera[] = [
 ];
 
 export const CURATED_CLIMATE_ENTITY = "climate.entryway";
+
+/** The Rachio controller. Zones and schedules are switches (on = running). */
+export const CURATED_SPRINKLERS = {
+  zones: [
+    { entityId: "switch.jardin_frente", name: "Jardín frente" },
+    { entityId: "switch.arbustos_frente", name: "Arbustos frente" },
+    { entityId: "switch.pasillo", name: "Pasillo" },
+    { entityId: "switch.zone_4", name: "Zone 4" },
+  ],
+  schedules: [
+    { entityId: "switch.regar_schedule", name: "Regar" },
+    { entityId: "switch.regar_2_schedule", name: "Regar 2" },
+    { entityId: "switch.pasto_grow_schedule", name: "Pasto grow" },
+    { entityId: "switch.pasto_grow_night_schedule", name: "Pasto grow night" },
+    { entityId: "switch.dos_dias_a_la_semana_schedule", name: "Todos los días" },
+  ],
+  /** Turning it on pauses all watering for 24 hours (Rachio's own delay). */
+  rainDelay: "switch.rachio_c2a930_rain_delay",
+  standby: "switch.rachio_c2a930_in_standby_mode",
+  rainSensor: "binary_sensor.rachio_c2a930_rain_sensor",
+  /** Minutes offered for a manual zone run. */
+  runMinutes: [5, 10, 15],
+};
+
+export interface CuratedTv {
+  key: string;
+  name: string;
+  /** androidtv_remote entities: the remote sends keys and launches apps,
+   * the media player reports what's on. Power and volume reach the TV
+   * panel itself over HDMI-CEC. */
+  remote: string;
+  player: string;
+}
+
+export const CURATED_TVS: CuratedTv[] = [
+  {
+    key: "living_room",
+    name: "Living room TV",
+    remote: "remote.living_room_living_room_tv_os",
+    player: "media_player.living_room_living_room_tv_os",
+  },
+  {
+    key: "andy",
+    name: "Andy's Shield",
+    remote: "remote.andy_s_room",
+    player: "media_player.andys_shield",
+  },
+];
+
+/** App shortcuts on the TV remote, launched with remote.turn_on's
+ * activity. market://launch opens the app by package name (or its Play
+ * Store page if it isn't installed on that TV). */
+export const TV_APPS: { name: string; activity: string; color: string }[] = [
+  { name: "YouTube", activity: "market://launch?id=com.google.android.youtube.tv", color: "#ff0033" },
+  { name: "Netflix", activity: "market://launch?id=com.netflix.ninja", color: "#e50914" },
+  { name: "Plex", activity: "market://launch?id=com.plexapp.android", color: "#e5a00d" },
+  { name: "Jellyfin", activity: "market://launch?id=org.jellyfin.androidtv", color: "#7d4fc6" },
+  { name: "Spotify", activity: "market://launch?id=com.spotify.tv.android", color: "#1db954" },
+  { name: "Disney+", activity: "market://launch?id=com.disney.disneyplus", color: "#113ccf" },
+  { name: "Prime Video", activity: "market://launch?id=com.amazon.amazonvideo.livingroom", color: "#00a8e1" },
+  { name: "Max", activity: "market://launch?id=com.wbd.stream", color: "#002be7" },
+];
 
 /**
  * The Roborock. `prefix` is the shared part of all its entity IDs

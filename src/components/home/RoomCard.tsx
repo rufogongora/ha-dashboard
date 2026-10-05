@@ -1,4 +1,5 @@
-import { Fan } from "lucide-react";
+import { Fan, SunDim } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
 import type { CuratedRoom } from "../../config/curatedHome";
@@ -7,10 +8,17 @@ import { roomColorFor, tintedGlass } from "../../lib/roomPalette";
 import { slugifyAreaName } from "../../lib/slug";
 import { ROOM_ILLUSTRATIONS } from "../illustrations/RoomIllustrations";
 import { IconToggleButton } from "./IconToggleButton";
+import { LightSheet } from "./LightSheet";
 
 export function RoomCard({ room, index }: { room: CuratedRoom; index: number }) {
   const { entities, callService } = useHa();
+  const [lightsOpen, setLightsOpen] = useState(false);
   const color = roomColorFor(index);
+  const hue = room.lights ? entities[room.lights] : undefined;
+  const hueOn = hue?.state === "on";
+  const hueBrightness = hueOn
+    ? Math.round(((hue!.attributes.brightness as number | undefined) ?? 0) / 2.55)
+    : 0;
   const Illustration = ROOM_ILLUSTRATIONS[room.illustration];
   const onCount = room.toggles.filter((t) => entities[t.entityId]?.state === "on").length;
   const active = onCount > 0;
@@ -52,6 +60,23 @@ export function RoomCard({ room, index }: { room: CuratedRoom; index: number }) 
             "All off"
           )}
         </div>
+        {hue && (
+          <button
+            onClick={() => {
+              navigator.vibrate?.(8);
+              setLightsOpen(true);
+            }}
+            className="mt-2 flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-transform active:scale-95"
+            style={
+              hueOn
+                ? { background: color.accent, color: "#fff", boxShadow: `0 4px 12px -4px ${color.accent}` }
+                : { background: "var(--chip-off)", color: color.accent }
+            }
+          >
+            <SunDim size={14} />
+            {hueOn ? `Hue · ${hueBrightness}%` : "Hue off"}
+          </button>
+        )}
       </div>
 
       <Illustration
@@ -82,6 +107,15 @@ export function RoomCard({ room, index }: { room: CuratedRoom; index: number }) 
           );
         })}
       </div>
+
+      {lightsOpen && room.lights && (
+        <LightSheet
+          groupId={room.lights}
+          roomName={room.name}
+          accent={color.accent}
+          onClose={() => setLightsOpen(false)}
+        />
+      )}
     </div>
   );
 }

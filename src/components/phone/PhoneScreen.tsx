@@ -18,6 +18,8 @@ import { CameraCard } from "../cards/CameraCard";
 import { ComputerCard } from "../devices/ComputerCard";
 import { RoomCard } from "../home/RoomCard";
 import { StatusBar } from "../home/StatusBar";
+import { SprinklersCard } from "../home/SprinklersCard";
+import { TvCard } from "../home/TvCard";
 import { VacuumCard } from "../home/VacuumCard";
 import { weatherIcon, weatherLabel } from "../home/statusIcons";
 import { useWeatherForecast } from "../home/useWeatherForecast";
@@ -115,7 +117,9 @@ function RoomsTab() {
         {CURATED_ROOMS.map((room, i) => (
           <RoomCard key={room.key} room={room} index={i} />
         ))}
-        <VacuumCard index={CURATED_ROOMS.length} />
+        <TvCard index={CURATED_ROOMS.length} />
+        <VacuumCard index={CURATED_ROOMS.length + 1} />
+        <SprinklersCard index={CURATED_ROOMS.length + 2} />
       </div>
     </>
   );
@@ -203,7 +207,7 @@ export function PhoneScreen() {
   const isNight = isNightFor(entities["sun.sun"]?.state);
 
   return (
-    <div className={clsx("relative h-full", isNight && "home-night")}>
+    <div className={clsx("relative h-full", isNight && "home-night")} data-sheet-root>
       <WeatherBackground condition={weather?.state} isNight={isNight} />
 
       {/* Keyed by path so switching tabs starts at the top and replays the

@@ -7,6 +7,8 @@ import { CameraWall } from "./home/CameraWall";
 import { HomeHero } from "./home/HomeHero";
 import { RoomCard } from "./home/RoomCard";
 import { StatusBar } from "./home/StatusBar";
+import { SprinklersCard } from "./home/SprinklersCard";
+import { TvCard } from "./home/TvCard";
 import { VacuumCard } from "./home/VacuumCard";
 import { WeatherBackground } from "./home/WeatherBackground";
 
@@ -26,7 +28,7 @@ export function HomeScreen() {
   const isNight = isNightFor(entities["sun.sun"]?.state);
 
   return (
-    <div className={clsx("relative flex h-full flex-col", isNight && "home-night")}>
+    <div className={clsx("relative flex h-full flex-col", isNight && "home-night")} data-sheet-root>
       <WeatherBackground condition={weather?.state} isNight={isNight} />
 
       {/* No z-index: see PhoneScreen — keeps pop-ups above the menu button. */}
@@ -65,6 +67,11 @@ export function HomeScreen() {
           </div>
 
           <VacuumCard index={CURATED_ROOMS.length} wide />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <TvCard index={CURATED_ROOMS.length + 1} />
+            <SprinklersCard index={CURATED_ROOMS.length + 2} />
+          </div>
 
           <section className="rise" style={{ animationDelay: "600ms" }}>
             <h3 className="hero-shadow mx-1 mb-3 mt-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">
