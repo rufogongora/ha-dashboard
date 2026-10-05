@@ -5,6 +5,7 @@ import { greetingFor } from "../../lib/greeting";
 import { useNow } from "../../lib/useNow";
 import { weatherIcon, weatherLabel } from "./statusIcons";
 import { useWeatherForecast } from "./useWeatherForecast";
+import { WhoIsHome } from "./WhoIsHome";
 
 /** Its own component so the once-a-second tick only re-renders the clock,
  * not the whole hero. */
@@ -62,7 +63,10 @@ export function HomeHero() {
 
   return (
     <section className="rise hero-shadow mx-1 mb-7 flex flex-wrap items-end justify-between gap-6 text-white">
-      <Clock />
+      <div className="flex flex-col gap-4">
+        <Clock />
+        <WhoIsHome />
+      </div>
 
       {weather && (
         <div className="flex flex-wrap items-center gap-6">

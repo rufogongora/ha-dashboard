@@ -21,6 +21,7 @@ import { StatusBar } from "../home/StatusBar";
 import { weatherIcon, weatherLabel } from "../home/statusIcons";
 import { useWeatherForecast } from "../home/useWeatherForecast";
 import { WeatherBackground } from "../home/WeatherBackground";
+import { WhoIsHome } from "../home/WhoIsHome";
 
 /** How often the phone's camera stills refresh (live stream on tap). */
 const CAMERA_SNAPSHOT_MS = 10_000;
@@ -57,6 +58,10 @@ function PhoneHeader() {
         {greetingFor(now.getHours())},<br />
         {HOUSEHOLD_NAME}
       </h1>
+
+      <div className="mt-3">
+        <WhoIsHome size={36} />
+      </div>
 
       {weather && (
         <div className="mt-4 flex items-center gap-3">

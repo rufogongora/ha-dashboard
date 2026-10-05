@@ -148,6 +148,14 @@ export const CURATED_WEATHER_ENTITY = "weather.forecast_home";
  * household rather than one person. */
 export const HOUSEHOLD_NAME = "Góngora family";
 
+/**
+ * Who's-home avatars on the Home screens. HA's person entities combine each
+ * person's trackers — their phone's UniFi Wi-Fi tracker (home the moment it
+ * joins the network) plus the Companion app's GPS when away — so the
+ * dashboard just reads the person, not individual devices.
+ */
+export const HOUSEHOLD_PEOPLE = ["person.rodolfo", "person.priscilla"];
+
 export interface CuratedDoorSensor {
   entityId: string;
   label: string;
