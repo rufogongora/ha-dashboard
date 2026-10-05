@@ -1,10 +1,14 @@
-import { HardDrive, Hourglass, Moon, Power } from "lucide-react";
+import { Clock, HardDrive, Hourglass, Moon, Power } from "lucide-react";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import type { HassEntity } from "home-assistant-js-websocket";
 import type { ComputerAction, ComputerMeter, CuratedComputer } from "../../config/computers";
 import { useHa } from "../../ha/HaProvider";
 import { useNow } from "../../lib/useNow";
+import { useStateHistory, type StatePoint } from "../home/useStateHistory";
+
+/** How far back to look for when a PC was last on / last in use. */
+const SINCE_LOOKBACK_HOURS = 7 * 24;
 
 const ACCENT = "#4f79c9";
 const WARN = "#d9822b";
@@ -24,6 +28,82 @@ function duration(ms: number) {
   if (d > 0) return `${d} d ${h} h`;
   if (h > 0) return `${h} h ${m} min`;
   return `${m} min`;
+}
+
+/**
+ * When a sensor last stopped being "good": the time of the first change
+ * after its last good state. Uses history rather than the entity's
+ * last_changed, which resets on every HA restart (HASS.Agent sensors come
+ * back as unavailable, so that time would just be the restart).
+ * undefined = still good at the end of history; null = never good in it.
+ */
+function leftGoodAt(points: StatePoint[] | undefined, good: (state: string) => boolean) {
+  if (!points || points.length === 0) return null;
+  for (let i = points.length - 1; i >= 0; i--) {
+    if (good(points[i].state)) return i === points.length - 1 ? undefined : points[i + 1].t;
+  }
+  return null;
+}
+
+/** "3:12 PM", "yesterday 11:40 PM" or "Mon 9:15 AM", plus how long ago. */
+function sinceLabel(t: number, now: Date) {
+  const d = new Date(t);
+  const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const days = Math.ceil((startOfToday.getTime() - t) / 86400000);
+  const when =
+    t >= startOfToday.getTime()
+      ? time
+      : days <= 1
+        ? `yesterday ${time}`
+        : `${d.toLocaleDateString(undefined, { weekday: "short" })} ${time}`;
+  return `${when} · ${duration(now.getTime() - t)} ago`;
+}
+
+/**
+ * "Offline since 3:12 PM · 2 h ago" (or "Idle since" for machines that
+ * report activity rather than going offline). Only mounted while the PC is
+ * off/idle, so the history fetch happens just then.
+ */
+function DownSince({ computer, now }: { computer: CuratedComputer; now: Date }) {
+  const activity = computer.activity;
+  const ids = activity
+    ? [activity.entityId]
+    : [computer.onlineEntity, ...(computer.pingEntity ? [computer.pingEntity] : [])];
+  const history = useStateHistory(ids, SINCE_LOOKBACK_HOURS);
+
+  let at: number | null | undefined;
+  if (history) {
+    if (activity) {
+      at = leftGoodAt(history[activity.entityId], (s) => s === "on");
+    } else {
+      const live = (s: string) => s !== "unavailable" && s !== "unknown";
+      const fromAgent = leftGoodAt(history[computer.onlineEntity], live);
+      const fromPing = computer.pingEntity ? leftGoodAt(history[computer.pingEntity], (s) => s === "on") : undefined;
+      // Offline as soon as either noticed; ignore whichever never saw it go.
+      const times = [fromAgent, fromPing].filter((t): t is number => typeof t === "number");
+      at = times.length > 0 ? Math.min(...times) : fromAgent === null && fromPing !== undefined ? null : undefined;
+    }
+  }
+
+  const word = activity ? "Idle" : "Offline";
+  return (
+    <div className="flex items-center gap-1.5 text-[13px] text-text-dim">
+      <Clock size={14} className="shrink-0" />
+      {!history ? (
+        `${word} · checking since when…`
+      ) : typeof at === "number" ? (
+        <span>
+          {word} since <span className="font-semibold text-text">{sinceLabel(at, now)}</span>
+        </span>
+      ) : at === null ? (
+        `${word} for over ${SINCE_LOOKBACK_HOURS / 24} days`
+      ) : (
+        `${word} just now`
+      )}
+    </div>
+  );
 }
 
 function formatFact(e: HassEntity | undefined, format: "since" | "ago" | "value", now: Date) {
@@ -209,6 +289,8 @@ export function ComputerCard({ computer, index }: { computer: CuratedComputer; i
               No activity for {idleFor}. Left on by mistake?
             </div>
           )}
+
+          {(activity ? !active : !online) && <DownSince computer={computer} now={now} />}
 
           {badges.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
