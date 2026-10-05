@@ -82,6 +82,9 @@ export const CURATED_COMPUTERS: CuratedComputer[] = [
       { label: "CPU temp", entityId: "sensor.skylab_package_id_0_temperature" },
     ],
     facts: [
+      // _3: two disabled UniFi "skylab uptime" sensors already hold the
+      // plain name.
+      { label: "Up", entityId: "sensor.skylab_uptime_3", format: "since" },
       { label: "Containers", entityId: "sensor.skylab_containers_active", format: "value" },
       { label: "Load", entityId: "sensor.skylab_cpu_load", format: "value" },
     ],
