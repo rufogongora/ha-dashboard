@@ -16,6 +16,7 @@ import { useNow } from "../../lib/useNow";
 import { isNightFor } from "../../lib/weatherTheme";
 import { CameraCard } from "../cards/CameraCard";
 import { ComputerCard } from "../devices/ComputerCard";
+import { GamingCard } from "../devices/GamingCard";
 import { RoomCard } from "../home/RoomCard";
 import { StatusBar } from "../home/StatusBar";
 import { SprinklersCard } from "../home/SprinklersCard";
@@ -153,8 +154,9 @@ function DevicesTab() {
     <>
       <PageTitle>Devices</PageTitle>
       <div className="flex flex-col gap-3">
+        <GamingCard />
         {CURATED_COMPUTERS.map((c, i) => (
-          <ComputerCard key={c.key} computer={c} index={i} />
+          <ComputerCard key={c.key} computer={c} index={i + 1} />
         ))}
       </div>
     </>
