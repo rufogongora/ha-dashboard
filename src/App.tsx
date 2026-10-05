@@ -2,6 +2,7 @@ import { Loader2, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { useHa } from "./ha/HaProvider";
+import { loadCredentials } from "./ha/connection";
 import { primeAudio } from "./lib/alarmSound";
 import { AreaPage } from "./components/AreaPage";
 import { DoorAlertMonitor } from "./components/DoorAlertMonitor";
@@ -11,6 +12,20 @@ import { OverviewPage } from "./components/OverviewPage";
 import { PhoneScreen } from "./components/phone/PhoneScreen";
 import { Sidebar } from "./components/Sidebar";
 import { SettingsPage } from "./components/SettingsPage";
+
+/** Shown while a saved login reconnects on launch. Same navy as the PWA's
+ * manifest background, so Android's launch splash fades straight into it. */
+function Splash() {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-5 bg-[#18213f] text-white/80">
+      <img src="/icon.svg" alt="" className="h-20 w-20 rounded-[22px] shadow-2xl" />
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <Loader2 size={16} className="animate-spin" />
+        Connecting…
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const { status } = useHa();
@@ -37,7 +52,13 @@ function App() {
   }, []);
 
   const reconnecting = status === "connecting" && everConnected;
+  // With a saved login, HaProvider reconnects on its own at launch; the
+  // form only belongs on screen if there's nothing saved or the saved login
+  // actually failed (auth-invalid / error keep showing it, with the reason).
+  // Checked each render (a cheap localStorage read) so signing out, which
+  // clears it, goes straight back to the form.
   if (status !== "connected" && !reconnecting) {
+    if (loadCredentials() && (status === "idle" || status === "connecting")) return <Splash />;
     return <Login />;
   }
 
