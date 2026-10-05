@@ -18,6 +18,7 @@ import { CameraCard } from "../cards/CameraCard";
 import { ComputerCard } from "../devices/ComputerCard";
 import { RoomCard } from "../home/RoomCard";
 import { StatusBar } from "../home/StatusBar";
+import { VacuumCard } from "../home/VacuumCard";
 import { weatherIcon, weatherLabel } from "../home/statusIcons";
 import { useWeatherForecast } from "../home/useWeatherForecast";
 import { WeatherBackground } from "../home/WeatherBackground";
@@ -114,6 +115,7 @@ function RoomsTab() {
         {CURATED_ROOMS.map((room, i) => (
           <RoomCard key={room.key} room={room} index={i} />
         ))}
+        <VacuumCard index={CURATED_ROOMS.length} />
       </div>
     </>
   );

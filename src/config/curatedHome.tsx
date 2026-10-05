@@ -136,6 +136,16 @@ export const CURATED_CAMERAS: CuratedCamera[] = [
 
 export const CURATED_CLIMATE_ENTITY = "climate.entryway";
 
+/**
+ * The Roborock. `prefix` is the shared part of all its entity IDs
+ * (vacuum.<prefix>, sensor.<prefix>_battery, ...), so the card can find the
+ * battery, map, dock tanks and so on without listing each one.
+ */
+export const CURATED_VACUUM = {
+  name: "Doña Alejandra",
+  prefix: "dona_alejandra_2_0",
+};
+
 /** Home's Sense energy monitor entities, shown in the status bar. */
 export const CURATED_ENERGY = {
   consumption: "sensor.sense_1000001241_energy",

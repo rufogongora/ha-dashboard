@@ -7,6 +7,7 @@ import { CameraWall } from "./home/CameraWall";
 import { HomeHero } from "./home/HomeHero";
 import { RoomCard } from "./home/RoomCard";
 import { StatusBar } from "./home/StatusBar";
+import { VacuumCard } from "./home/VacuumCard";
 import { WeatherBackground } from "./home/WeatherBackground";
 
 /**
@@ -61,6 +62,8 @@ export function HomeScreen() {
               <CameraSidebar />
             </div>
           </div>
+
+          <VacuumCard index={CURATED_ROOMS.length} wide />
 
           <section className="rise" style={{ animationDelay: "600ms" }}>
             <h3 className="hero-shadow mx-1 mb-3 mt-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">
