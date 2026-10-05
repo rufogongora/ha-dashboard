@@ -27,6 +27,8 @@ services:
       VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@localhost}
     volumes:
       - ./push-data:/data
+    # LAN only, for HA (rest_command.dashboard_push -> :8094/send). 8082 is
+    # taken on skylab by daily-reset; inside the container it's still 8082.
     ports:
-      - "8082:8082"
+      - "192.168.1.54:8094:8082"
     restart: unless-stopped
