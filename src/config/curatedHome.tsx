@@ -144,6 +144,10 @@ export const CURATED_ENERGY = {
 
 export const CURATED_WEATHER_ENTITY = "weather.forecast_home";
 
+/** Who the Home screen greets — it's a shared wall tablet, so the
+ * household rather than one person. */
+export const HOUSEHOLD_NAME = "Góngora family";
+
 export interface CuratedDoorSensor {
   entityId: string;
   label: string;

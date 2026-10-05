@@ -1,7 +1,9 @@
+import { Fan } from "lucide-react";
 import { Link } from "react-router-dom";
+import clsx from "clsx";
 import type { CuratedRoom } from "../../config/curatedHome";
 import { useHa } from "../../ha/HaProvider";
-import { roomColorFor } from "../../lib/roomPalette";
+import { roomColorFor, tintedGlass } from "../../lib/roomPalette";
 import { slugifyAreaName } from "../../lib/slug";
 import { ROOM_ILLUSTRATIONS } from "../illustrations/RoomIllustrations";
 import { IconToggleButton } from "./IconToggleButton";
@@ -10,6 +12,8 @@ export function RoomCard({ room, index }: { room: CuratedRoom; index: number }) 
   const { entities, callService } = useHa();
   const color = roomColorFor(index);
   const Illustration = ROOM_ILLUSTRATIONS[room.illustration];
+  const onCount = room.toggles.filter((t) => entities[t.entityId]?.state === "on").length;
+  const active = onCount > 0;
 
   function toggle(entityId: string) {
     callService("switch", "toggle", {}, { entity_id: entityId }).catch(() => {});
@@ -17,25 +21,51 @@ export function RoomCard({ room, index }: { room: CuratedRoom; index: number }) 
 
   return (
     <div
-      className="relative flex items-stretch justify-between gap-3 overflow-hidden rounded-3xl border border-white/40 p-5 shadow-sm backdrop-blur-md"
-      style={{ background: color.glass }}
+      className="glass rise relative flex min-h-[168px] items-stretch justify-between gap-3 overflow-hidden rounded-[26px] py-4 pl-5 pr-4"
+      style={{
+        background: tintedGlass(color),
+        animationDelay: `${300 + index * 50}ms`,
+        // Lit rooms get an accent-colored edge and halo.
+        ...(active && {
+          borderColor: `${color.accent}8c`,
+          boxShadow: `var(--glass-shadow), 0 0 0 1px ${color.accent}4d, 0 0 34px -6px ${color.accent}8c`,
+        }),
+      }}
     >
-      <div className="flex min-w-0 flex-1 flex-col justify-between">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
         <Link
           to={`/area/${slugifyAreaName(room.name)}`}
-          className="w-fit text-base font-semibold text-[#2c2a26] hover:underline"
+          className="w-fit text-[19px] font-semibold tracking-[-0.3px] text-text hover:underline"
         >
           {room.name}
         </Link>
-        <Illustration
-          size={76}
-          strokeWidth={1.5}
-          style={{ color: color.accent, opacity: 0.35 }}
-          className="-ml-1"
-        />
+        <div className="mt-0.5 flex items-center text-[13px] text-text-dim">
+          {active ? (
+            <>
+              <span
+                className="mr-1.5 inline-block h-[7px] w-[7px] rounded-full"
+                style={{ background: color.accent, boxShadow: `0 0 8px ${color.accent}` }}
+              />
+              {onCount} on
+            </>
+          ) : (
+            "All off"
+          )}
+        </div>
       </div>
 
-      <div className="flex w-[192px] flex-wrap content-start justify-end gap-2">
+      <Illustration
+        size={104}
+        strokeWidth={1.1}
+        aria-hidden
+        className={clsx(
+          "pointer-events-none absolute -bottom-3.5 left-3.5 transition-[opacity,transform] duration-500",
+          active ? "-translate-y-1 opacity-40" : "opacity-[0.22]",
+        )}
+        style={{ color: color.accent }}
+      />
+
+      <div className="relative z-10 flex w-[184px] flex-wrap content-start justify-end gap-2">
         {room.toggles.map((toggle_) => {
           const state = entities[toggle_.entityId]?.state;
           const unavailable = state === undefined || state === "unavailable";
@@ -46,6 +76,7 @@ export function RoomCard({ room, index }: { room: CuratedRoom; index: number }) 
               label={toggle_.label}
               on={state === "on"}
               accent={unavailable ? "#b5b0a3" : color.accent}
+              spinWhenOn={toggle_.icon === Fan}
               onClick={() => !unavailable && toggle(toggle_.entityId)}
             />
           );

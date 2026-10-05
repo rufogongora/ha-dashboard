@@ -6,11 +6,13 @@ const POLL_MS = 4000;
 export interface SpotcastTrack {
   name: string;
   artists: { name: string }[];
-  album: { images: { url: string }[] };
+  album: { name?: string; images: { url: string }[] };
+  duration_ms?: number;
 }
 
 export interface SpotcastPlayerState {
   is_playing?: boolean;
+  progress_ms?: number;
   item?: SpotcastTrack;
   device?: { volume_percent?: number; supports_volume?: boolean };
 }

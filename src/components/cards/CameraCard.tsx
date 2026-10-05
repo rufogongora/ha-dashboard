@@ -80,7 +80,7 @@ export function CameraCard({
         "group relative flex min-h-0 flex-col gap-2",
         fill && "flex-1",
         bare
-          ? "overflow-hidden rounded-2xl shadow-sm"
+          ? "overflow-hidden rounded-[26px] border border-[var(--glass-edge)] shadow-[var(--glass-shadow)]"
           : "overflow-hidden rounded-2xl border border-border bg-surface p-3",
         dead && "opacity-40",
       )}
@@ -96,7 +96,7 @@ export function CameraCard({
         className={clsx(
           "relative w-full overflow-hidden bg-black/40",
           fill ? "min-h-0 flex-1" : "aspect-video",
-          bare ? "rounded-2xl" : "rounded-xl",
+          bare ? "rounded-[26px]" : "rounded-xl",
           imgSrc && !dead && "cursor-pointer",
         )}
         onClick={() => {
@@ -116,13 +116,29 @@ export function CameraCard({
           </div>
         )}
         {errored && !dead && (
-          <div className="absolute bottom-1.5 right-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-warn">
+          <div className={clsx("absolute rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-warn", bare ? "right-3 top-3" : "bottom-1.5 right-1.5")}>
 stream unavailable
           </div>
         )}
         {imgSrc && !dead && (
-          <div className="absolute bottom-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-md bg-black/50 text-white/90">
+          <div
+            className={clsx(
+              "absolute flex h-6 w-6 items-center justify-center rounded-md bg-black/50 text-white/90",
+              bare ? "right-3 top-3" : "bottom-1.5 right-1.5",
+            )}
+          >
             <Maximize2 size={12} />
+          </div>
+        )}
+        {bare && imgSrc && !dead && !errored && (
+          <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-bold tracking-[0.06em] text-white backdrop-blur-sm">
+            <span className="live-dot h-[7px] w-[7px] rounded-full bg-[#ff4d4f]" />
+            LIVE
+          </div>
+        )}
+        {bare && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-4 pb-3 pt-7 text-[15px] font-semibold text-white">
+            {ent.friendlyName}
           </div>
         )}
       </div>

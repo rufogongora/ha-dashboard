@@ -61,6 +61,15 @@ interface HaContextValue {
    * context covers.
    */
   sendMessage: <T>(message: { type: string } & Record<string, unknown>) => Promise<T>;
+  /**
+   * Opens a websocket subscription (e.g. `weather/subscribe_forecast`) and
+   * resolves to its unsubscribe function. The underlying library re-sends the
+   * subscription automatically after a reconnect.
+   */
+  subscribeMessage: <T>(
+    callback: (message: T) => void,
+    message: { type: string } & Record<string, unknown>,
+  ) => Promise<() => Promise<void>>;
 }
 
 const HaContext = createContext<HaContextValue | null>(null);
@@ -205,6 +214,18 @@ export function HaProvider({ children }: { children: React.ReactNode }) {
     return conn.sendMessagePromise<T>(message);
   }, []);
 
+  const subscribeMessage = useCallback(
+    async <T,>(
+      callback: (message: T) => void,
+      message: { type: string } & Record<string, unknown>,
+    ) => {
+      const conn = connectionRef.current;
+      if (!conn) throw new Error("Not connected to Home Assistant.");
+      return conn.subscribeMessage<T>(callback, message);
+    },
+    [],
+  );
+
   // Build entity_id -> area map from the registries (mirrors HA frontend logic:
   // entity's own area wins, otherwise fall back to its device's area).
   const entitiesWithArea = useMemo<Record<string, EntityWithArea>>(() => {
@@ -260,6 +281,7 @@ export function HaProvider({ children }: { children: React.ReactNode }) {
       callService,
       signPath,
       sendMessage,
+      subscribeMessage,
     }),
     [
       status,
@@ -273,6 +295,7 @@ export function HaProvider({ children }: { children: React.ReactNode }) {
       callService,
       signPath,
       sendMessage,
+      subscribeMessage,
     ],
   );
 
