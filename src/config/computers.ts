@@ -40,6 +40,11 @@ export interface CuratedComputer {
   icon: LucideIcon;
   /** Considered online while this entity is reporting (not unavailable). */
   onlineEntity: string;
+  /** A ping-backed entity (the wake_on_lan switch, which pings its host)
+   * that also counts: offline as soon as either says so. HASS.Agent can take
+   * ~25 s to go unavailable after a sleep — and briefly reports again while
+   * shutting down — so without this the Wake button showed up late. */
+  pingEntity?: string;
   /** For machines that never report "unavailable" (the Mac's Companion
    * app keeps its last values while asleep): a binary sensor whose on/off
    * replaces the Online/Offline pill. */
@@ -72,6 +77,7 @@ export const CURATED_COMPUTERS: CuratedComputer[] = [
     subtitle: "Windows PC",
     icon: Monitor,
     onlineEntity: "sensor.apollo_sessionstate",
+    pingEntity: "switch.apollo_pc",
     meters: [
       { label: "CPU", entityId: "sensor.apollo_cpuload" },
       { label: "Memory", entityId: "sensor.apollo_memoryusage" },
@@ -95,6 +101,7 @@ export const CURATED_COMPUTERS: CuratedComputer[] = [
     subtitle: "Attic PC",
     icon: Monitor,
     onlineEntity: "sensor.artemis_sessionstate",
+    pingEntity: "switch.artemis_pc",
     meters: [
       { label: "CPU", entityId: "sensor.artemis_cpuload" },
       { label: "Memory", entityId: "sensor.artemis_memoryusage" },

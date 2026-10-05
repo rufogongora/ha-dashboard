@@ -148,7 +148,8 @@ export function ComputerCard({ computer, index }: { computer: CuratedComputer; i
     ...(computer.disks ?? []).map((d) => d.entityId),
   ];
   const configured = ids.some((id) => entities[id]);
-  const online = isLive(entities[computer.onlineEntity]);
+  const ping = computer.pingEntity ? entities[computer.pingEntity] : undefined;
+  const online = isLive(entities[computer.onlineEntity]) && ping?.state !== "off";
   const activity = computer.activity;
   const active = activity ? entities[activity.entityId]?.state === "on" : online;
   const pillText = activity ? (active ? activity.on : activity.off) : online ? "Online" : "Offline";
