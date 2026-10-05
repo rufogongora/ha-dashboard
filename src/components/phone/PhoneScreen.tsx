@@ -1,4 +1,4 @@
-import { Cctv, House, LayoutGrid, type LucideIcon } from "lucide-react";
+import { Cctv, Cpu, House, LayoutGrid, type LucideIcon } from "lucide-react";
 import { createElement } from "react";
 import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import clsx from "clsx";
@@ -8,12 +8,14 @@ import {
   CURATED_WEATHER_ENTITY,
   HOUSEHOLD_NAME,
 } from "../../config/curatedHome";
+import { CURATED_COMPUTERS } from "../../config/computers";
 import { useHa } from "../../ha/HaProvider";
 import { resolveCuratedCamera } from "../../lib/entityHelpers";
 import { greetingFor } from "../../lib/greeting";
 import { useNow } from "../../lib/useNow";
 import { isNightFor } from "../../lib/weatherTheme";
 import { CameraCard } from "../cards/CameraCard";
+import { ComputerCard } from "../devices/ComputerCard";
 import { RoomCard } from "../home/RoomCard";
 import { StatusBar } from "../home/StatusBar";
 import { weatherIcon, weatherLabel } from "../home/statusIcons";
@@ -135,10 +137,24 @@ function CamerasTab() {
   );
 }
 
+function DevicesTab() {
+  return (
+    <>
+      <PageTitle>Devices</PageTitle>
+      <div className="flex flex-col gap-3">
+        {CURATED_COMPUTERS.map((c, i) => (
+          <ComputerCard key={c.key} computer={c} index={i} />
+        ))}
+      </div>
+    </>
+  );
+}
+
 const TABS: { to: string; label: string; icon: LucideIcon; end?: boolean }[] = [
   { to: "/phone", label: "Home", icon: House, end: true },
   { to: "/phone/rooms", label: "Rooms", icon: LayoutGrid },
   { to: "/phone/cameras", label: "Cameras", icon: Cctv },
+  { to: "/phone/devices", label: "Devices", icon: Cpu },
 ];
 
 function TabBar() {
@@ -201,6 +217,7 @@ export function PhoneScreen() {
           />
           <Route path="rooms" element={<RoomsTab />} />
           <Route path="cameras" element={<CamerasTab />} />
+          <Route path="devices" element={<DevicesTab />} />
         </Routes>
       </div>
 
