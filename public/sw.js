@@ -6,7 +6,7 @@
 //   falling back to the last cached index.html when offline.
 // - Hashed build assets (/assets/*): cache first — their names change on
 //   every build, so a cached copy is never stale.
-const CACHE = "ha-dashboard-v1";
+const CACHE = "ha-dashboard-v2";
 
 self.addEventListener("install", () => self.skipWaiting());
 
@@ -16,6 +16,41 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
+  );
+});
+
+// --- Web push (push/server.mjs) --------------------------------------------
+// Payload: { title, message, url, tag }. Same tag replaces the previous
+// notification instead of stacking (e.g. repeated "left on" reminders).
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { message: event.data ? event.data.text() : "" };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Home", {
+      body: data.message || "",
+      icon: "/icon-192.png",
+      tag: data.tag || undefined,
+      renotify: Boolean(data.tag),
+      data: { url: data.url || "/phone" },
+    }),
+  );
+});
+
+// Tapping a notification focuses the open app (navigating it to the
+// notification's screen) or launches it there.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL(event.notification.data?.url || "/phone", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      const win = wins.find((w) => w.url.startsWith(self.location.origin));
+      if (win) return win.focus().then((w) => (w && "navigate" in w ? w.navigate(url) : undefined));
+      return self.clients.openWindow(url);
+    }),
   );
 });
 

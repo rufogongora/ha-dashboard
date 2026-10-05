@@ -1,0 +1,12 @@
+{
+  "name": "ha-dashboard-push",
+  "private": true,
+  "type": "module",
+  "description": "Web push sender for the dashboard PWA (see server.mjs)",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

@@ -11,3 +11,22 @@ services:
     ports:
       - "8081:80"
     restart: unless-stopped
+
+  # Web push for the PWA (push/server.mjs). The dashboard's nginx proxies
+  # the phone-facing endpoints at /api/push/*; Home Assistant calls /send
+  # directly on the LAN port with PUSH_SECRET. Keys/secret live in .env.
+  push:
+    build:
+      context: ./push
+    container_name: ha-dashboard-push
+    environment:
+      HA_URL: ${PUSH_HA_URL:-http://192.168.1.54:8123}
+      PUSH_SECRET: ${PUSH_SECRET:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@localhost}
+    volumes:
+      - ./push-data:/data
+    ports:
+      - "8082:8082"
+    restart: unless-stopped

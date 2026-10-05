@@ -307,6 +307,8 @@ export const CURATED_QUICK_ACTIONS: QuickAction[] = [
     // true) are left alone, since you'd still want those on while out.
     entityIds: [
       ...CURATED_ROOMS.filter((r) => !r.external).flatMap((r) => r.toggles.map((t) => t.entityId)),
+      // Indoor rooms' Hue groups too, so "everything off" really is.
+      ...CURATED_ROOMS.filter((r) => !r.external && r.lights).map((r) => r.lights!),
       ...CURATED_INDOOR_TVS,
     ],
   },

@@ -17,6 +17,8 @@ import { isNightFor } from "../../lib/weatherTheme";
 import { CameraCard } from "../cards/CameraCard";
 import { ActivityFeed } from "../home/ActivityFeed";
 import { ComputerCard } from "../devices/ComputerCard";
+import { NotificationsCard } from "../devices/NotificationsCard";
+import { QuickActionLink } from "./QuickActionLink";
 import { GamingCard } from "../devices/GamingCard";
 import { RoomCard } from "../home/RoomCard";
 import { StatusBar } from "../home/StatusBar";
@@ -164,6 +166,7 @@ function DevicesTab() {
         {CURATED_COMPUTERS.map((c, i) => (
           <ComputerCard key={c.key} computer={c} index={i + 1} />
         ))}
+        <NotificationsCard index={CURATED_COMPUTERS.length + 1} />
       </div>
     </>
   );
@@ -243,6 +246,7 @@ export function PhoneScreen() {
       </div>
 
       <TabBar />
+      <QuickActionLink />
     </div>
   );
 }
