@@ -34,6 +34,7 @@
  * tokens (not just the glass ones) means everything rendered inside it —
  * including the climate/Spotify modals — goes dark together. */
 .home-night {
+  --color-bg: #161b2e;
   --color-surface: #1e243a;
   --color-surface-hover: #262d47;
   --color-border: rgba(255, 255, 255, 0.1);

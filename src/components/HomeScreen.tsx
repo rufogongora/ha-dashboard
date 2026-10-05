@@ -29,7 +29,8 @@ export function HomeScreen() {
     <div className={clsx("relative flex h-full flex-col", isNight && "home-night")}>
       <WeatherBackground condition={weather?.state} isNight={isNight} />
 
-      <div className="relative z-10 h-full overflow-y-auto px-7 pb-10 pt-20">
+      {/* No z-index: see PhoneScreen — keeps pop-ups above the menu button. */}
+      <div className="relative h-full overflow-y-auto px-7 pb-10 pt-20">
         <div className="hero-shadow absolute right-7 top-7 flex items-center gap-1.5 text-xs text-white/90">
           <span
             className={clsx(

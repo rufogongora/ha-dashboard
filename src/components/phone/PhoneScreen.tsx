@@ -207,10 +207,12 @@ export function PhoneScreen() {
       <WeatherBackground condition={weather?.state} isNight={isNight} />
 
       {/* Keyed by path so switching tabs starts at the top and replays the
-          entrance animation. */}
+          entrance animation. No z-index on purpose: that would trap the
+          tiles' pop-ups (z-50) below the tab bar (z-40). It still paints
+          over the weather photo, which comes first at z-index 0. */}
       <div
         key={pathname}
-        className="relative z-10 h-full overflow-y-auto px-4 pb-32 pt-[calc(env(safe-area-inset-top)+1.5rem)]"
+        className="relative h-full overflow-y-auto px-4 pb-32 pt-[calc(env(safe-area-inset-top)+1.5rem)]"
       >
         <Routes>
           <Route

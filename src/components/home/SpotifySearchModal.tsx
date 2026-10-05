@@ -81,15 +81,15 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} aria-hidden />
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
 
       <div
-        className="relative flex h-[80vh] w-full max-w-lg flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xl"
+        className="relative flex h-[85vh] w-full max-w-lg flex-col gap-4 rounded-t-[26px] border border-border bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-xl sm:h-[80vh] sm:rounded-[26px]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-text">Play on Living Room TV</div>
+          <div className="text-lg font-semibold text-text">Play on Living Room TV</div>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -100,30 +100,32 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {track && (
-          <div className="flex items-center gap-3 rounded-2xl bg-chip p-3">
-            {albumArt ? (
-              <img src={albumArt} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
-            ) : (
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface text-[#1DB954]">
-                <Music size={18} strokeWidth={1.75} />
+          <div className="flex flex-col gap-3 rounded-2xl bg-chip p-3">
+            <div className="flex items-center gap-3">
+              {albumArt ? (
+                <img src={albumArt} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+              ) : (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-surface text-[#1DB954]">
+                  <Music size={18} strokeWidth={1.75} />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium text-text">{track.name}</div>
+                <div className="truncate text-xs text-text-dim">
+                  {track.artists.map((a) => a.name).join(", ")}
+                </div>
               </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium text-text">{track.name}</div>
-              <div className="truncate text-xs text-text-dim">
-                {track.artists.map((a) => a.name).join(", ")}
-              </div>
+              <button
+                onClick={() => controlCall(playing ? "media_pause" : "media_play")}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-text shadow-sm hover:bg-surface-hover active:scale-95"
+                aria-label={playing ? "Pause" : "Play"}
+              >
+                {playing ? <Pause size={16} /> : <Play size={16} />}
+              </button>
             </div>
-            <button
-              onClick={() => controlCall(playing ? "media_pause" : "media_play")}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-surface text-text shadow-sm hover:bg-surface-hover active:scale-95"
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              {playing ? <Pause size={16} /> : <Play size={16} />}
-            </button>
             {typeof volume === "number" && (
-              <div className="flex w-20 shrink-0 items-center gap-1.5">
-                <Volume2 size={13} className="shrink-0 text-text-dim" />
+              <div className="flex items-center gap-2.5 px-1">
+                <Volume2 size={15} className="shrink-0 text-text-dim" />
                 <input
                   type="range"
                   min={0}
@@ -132,8 +134,10 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
                   onChange={(e) =>
                     controlCall("volume_set", { volume_level: Number(e.target.value) / 100 })
                   }
-                  className="flex-1"
+                  className="w-full min-w-0 flex-1"
+                  aria-label="Volume"
                 />
+                <span className="w-8 shrink-0 text-right text-xs tabular-nums text-text-dim">{volume}</span>
               </div>
             )}
           </div>
