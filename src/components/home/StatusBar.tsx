@@ -25,6 +25,8 @@ import type { RoomColor } from "../../lib/roomPalette";
 import { roomColorFor } from "../../lib/roomPalette";
 import { useNow } from "../../lib/useNow";
 import { ClimateControlModal } from "../climate/ClimateControlModal";
+import { DoorsModal } from "./DoorsModal";
+import { PowerModal } from "./PowerModal";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { QuickActionToast } from "./QuickActionToast";
 import { Sparkline } from "./Sparkline";
@@ -82,7 +84,7 @@ function powerParts(state: string, unit: string | undefined) {
   return { value: n, decimals: unit === "W" ? 0 : 2, unit: unit ?? "" };
 }
 
-function PowerTile({ className }: { className?: string }) {
+function PowerTile({ className, onOpen }: { className?: string; onOpen: () => void }) {
   const { entities } = useHa();
   const consumption = entities[CURATED_ENERGY.consumption];
   const production = entities[CURATED_ENERGY.production];
@@ -95,7 +97,11 @@ function PowerTile({ className }: { className?: string }) {
     : null;
 
   return (
-    <div className={clsx(tileClass, className)} style={{ animationDelay: "80ms" }}>
+    <button
+      onClick={onOpen}
+      className={clsx(tileClass, "cursor-pointer transition-transform active:scale-[0.98]", className)}
+      style={{ animationDelay: "80ms" }}
+    >
       <TileHeader icon={Zap} label="Power" color={POWER_COLOR} />
       <BigValue unit={parts?.unit}>
         {parts ? <AnimatedNumber value={parts.value} decimals={parts.decimals} /> : "—"}
@@ -113,7 +119,7 @@ function PowerTile({ className }: { className?: string }) {
           <div className="text-[13px] text-text-dim">Using now</div>
         )}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -267,7 +273,7 @@ function minutesAgo(iso: string, now: Date) {
 
 /** Open/closed at a glance for the same door sensors DoorAlertMonitor
  * watches — the thing you most want to check from your phone. */
-function DoorsTile({ className }: { className?: string }) {
+function DoorsTile({ className, onOpen }: { className?: string; onOpen: () => void }) {
   const { entities } = useHa();
   const now = useNow(30_000);
   const doors = CURATED_DOOR_SENSORS.map((d) => ({ ...d, entity: entities[d.entityId] }));
@@ -276,8 +282,9 @@ function DoorsTile({ className }: { className?: string }) {
   const anyOpen = open.length > 0;
 
   return (
-    <div
-      className={clsx(tileClass, className)}
+    <button
+      onClick={onOpen}
+      className={clsx(tileClass, "cursor-pointer transition-transform active:scale-[0.98]", className)}
       style={{
         animationDelay: "170ms",
         ...(anyOpen && {
@@ -306,13 +313,15 @@ function DoorsTile({ className }: { className?: string }) {
             ))
           : `${doors.length - unknown.length} of ${doors.length} reporting`}
       </div>
-    </div>
+    </button>
   );
 }
 
 export function StatusBar({ variant = "tablet" }: { variant?: "tablet" | "phone" }) {
   const { entities, callService } = useHa();
   const [climateOpen, setClimateOpen] = useState(false);
+  const [powerOpen, setPowerOpen] = useState(false);
+  const [doorsOpen, setDoorsOpen] = useState(false);
   const [spotifyOpen, setSpotifyOpen] = useState(false);
   const [toastAction, setToastAction] = useState<QuickAction | null>(null);
   // Bumped on every tap so re-tapping the same action while its toast is
@@ -343,16 +352,16 @@ export function StatusBar({ variant = "tablet" }: { variant?: "tablet" | "phone"
         // tiles side by side, then doors and music full width.
         <>
           <QuickActionsTile onRun={runAction} className="col-span-2 min-h-0" />
-          <PowerTile />
+          <PowerTile onOpen={() => setPowerOpen(true)} />
           <ClimateTile onOpen={() => setClimateOpen(true)} />
-          <DoorsTile className="col-span-2 min-h-0" />
+          <DoorsTile className="col-span-2 min-h-0" onOpen={() => setDoorsOpen(true)} />
           <SpotifyTile onOpen={() => setSpotifyOpen(true)} className="col-span-2" />
         </>
       ) : (
         <>
-          <PowerTile />
+          <PowerTile onOpen={() => setPowerOpen(true)} />
           <ClimateTile onOpen={() => setClimateOpen(true)} />
-          <DoorsTile />
+          <DoorsTile onOpen={() => setDoorsOpen(true)} />
           <QuickActionsTile onRun={runAction} />
           <SpotifyTile onOpen={() => setSpotifyOpen(true)} className="max-lg:col-span-2" />
         </>
@@ -366,6 +375,8 @@ export function StatusBar({ variant = "tablet" }: { variant?: "tablet" | "phone"
       )}
 
       {spotifyOpen && <SpotifySearchModal onClose={() => setSpotifyOpen(false)} />}
+      {powerOpen && <PowerModal onClose={() => setPowerOpen(false)} />}
+      {doorsOpen && <DoorsModal onClose={() => setDoorsOpen(false)} />}
 
       {toastAction && (
         <QuickActionToast

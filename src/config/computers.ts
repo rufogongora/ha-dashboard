@@ -86,8 +86,6 @@ export const CURATED_COMPUTERS: CuratedComputer[] = [
     meters: [
       { label: "CPU", entityId: "sensor.apollo_cpuload" },
       { label: "Memory", entityId: "sensor.apollo_memoryusage" },
-      { label: "GPU", entityId: "sensor.apollo_gpuload" },
-      { label: "GPU temp", entityId: "sensor.apollo_gputemperature" },
     ],
     facts: [
       { label: "Up", entityId: "sensor.apollo_lastboot", format: "since" },
