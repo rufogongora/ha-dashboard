@@ -1,8 +1,12 @@
-import { Monitor, Server, type LucideIcon } from "lucide-react";
+import { Laptop, Monitor, Server, type LucideIcon } from "lucide-react";
 
 export interface ComputerMeter {
   label: string;
   entityId: string;
+  /** For "% available"-style sensors: show 100 minus the value. */
+  invert?: boolean;
+  /** Battery-style: warn when the value is low instead of high. */
+  lowIsBad?: boolean;
 }
 
 export interface ComputerFact {
@@ -31,6 +35,12 @@ export interface CuratedComputer {
   icon: LucideIcon;
   /** Considered online while this entity is reporting (not unavailable). */
   onlineEntity: string;
+  /** For machines that never report "unavailable" (the Mac's Companion
+   * app keeps its last values while asleep): a binary sensor whose on/off
+   * replaces the Online/Offline pill. */
+  activity?: { entityId: string; on: string; off: string };
+  /** Binary sensors shown as small chips while on (camera in use, ...). */
+  badges?: { entityId: string; label: string }[];
   meters: ComputerMeter[];
   facts: ComputerFact[];
   disks?: ComputerMeter[];
@@ -45,6 +55,8 @@ export interface CuratedComputer {
  * APOLLO reports through HASS.Agent → Mosquitto (MQTT) on skylab, plus a
  * wake_on_lan switch for waking it. skylab reports through the Glances
  * container in ~/docker-compose/glances and HA's Glances integration.
+ * Rufos Mac reports through the Home Assistant Companion app for macOS,
+ * which has no CPU/memory sensors.
  */
 export const CURATED_COMPUTERS: CuratedComputer[] = [
   {
@@ -96,5 +108,27 @@ export const CURATED_COMPUTERS: CuratedComputer[] = [
       { label: "Media pool", entityId: "sensor.skylab_mnt_pool_disk_usage" },
     ],
     setupHint: "Add the Glances integration in Home Assistant (host: skylab, port 61208).",
+  },
+  {
+    key: "rufos_mac",
+    name: "Rufos Mac",
+    subtitle: "MacBook Air",
+    icon: Laptop,
+    onlineEntity: "binary_sensor.rufos_mac_active",
+    activity: { entityId: "binary_sensor.rufos_mac_active", on: "In use", off: "Idle" },
+    meters: [
+      { label: "Battery", entityId: "sensor.rufos_mac_internal_battery_level", lowIsBad: true },
+      { label: "Storage used", entityId: "sensor.rufos_mac_storage", invert: true },
+    ],
+    facts: [
+      { label: "Power", entityId: "sensor.rufos_mac_internal_battery_state", format: "value" },
+      { label: "App", entityId: "sensor.rufos_mac_frontmost_app", format: "value" },
+      { label: "Wi-Fi", entityId: "sensor.rufos_mac_ssid", format: "value" },
+    ],
+    badges: [
+      { entityId: "binary_sensor.rufos_mac_camera_in_use", label: "Camera in use" },
+      { entityId: "binary_sensor.rufos_mac_audio_input_in_use", label: "Mic in use" },
+    ],
+    setupHint: "Open the Home Assistant app on the Mac.",
   },
 ];

@@ -41,9 +41,10 @@ function formatFact(e: HassEntity | undefined, format: "since" | "ago" | "value"
 
 /** A metric as a 0–100 bar: percentages as-is; temperatures scaled to a
  * rough "how hot" range so the bar still reads at a glance. */
-function meterReading(e: HassEntity | undefined) {
+function meterReading(e: HassEntity | undefined, invert = false, lowIsBad = false) {
   if (!isLive(e)) return null;
-  const v = parseFloat(e!.state);
+  const raw = parseFloat(e!.state);
+  const v = invert ? 100 - raw : raw;
   if (!Number.isFinite(v)) return null;
   const unit = (e!.attributes.unit_of_measurement as string | undefined) ?? "";
   if (unit === "°F" || unit === "°C") {
@@ -53,11 +54,27 @@ function meterReading(e: HassEntity | undefined) {
     const pct = Math.min(100, Math.max(0, ((c - 30) / (95 - 30)) * 100));
     return { text: `${Math.round(v)}${unit}`, pct, warn: c >= 75, danger: c >= 88 };
   }
-  return { text: `${Math.round(v)}${unit}`, pct: Math.min(100, Math.max(0, v)), warn: v >= 75, danger: v >= 90 };
+  const pct = Math.min(100, Math.max(0, v));
+  const text = `${Math.round(v)}${unit.startsWith("%") ? "%" : unit}`;
+  return lowIsBad
+    ? { text, pct, warn: v <= 20, danger: v <= 10 }
+    : { text, pct, warn: v >= 75, danger: v >= 90 };
 }
 
-function Bar({ label, entity, icon }: { label: string; entity: HassEntity | undefined; icon?: boolean }) {
-  const r = meterReading(entity);
+function Bar({
+  label,
+  entity,
+  icon,
+  invert,
+  lowIsBad,
+}: {
+  label: string;
+  entity: HassEntity | undefined;
+  icon?: boolean;
+  invert?: boolean;
+  lowIsBad?: boolean;
+}) {
+  const r = meterReading(entity, invert, lowIsBad);
   const color = r?.danger ? DANGER : r?.warn ? WARN : ACCENT;
   return (
     <div className="flex flex-col gap-1.5">
@@ -136,6 +153,10 @@ export function ComputerCard({ computer, index }: { computer: CuratedComputer; i
   ];
   const configured = ids.some((id) => entities[id]);
   const online = isLive(entities[computer.onlineEntity]);
+  const activity = computer.activity;
+  const active = activity ? entities[activity.entityId]?.state === "on" : online;
+  const pillText = activity ? (active ? activity.on : activity.off) : online ? "Online" : "Offline";
+  const badges = (computer.badges ?? []).filter((b) => entities[b.entityId]?.state === "on");
   const actions = (computer.actions ?? []).filter((a) => a.when === (online ? "online" : "offline"));
 
   return (
@@ -159,11 +180,11 @@ export function ComputerCard({ computer, index }: { computer: CuratedComputer; i
             <span
               className="h-2 w-2 rounded-full"
               style={{
-                background: online ? ONLINE : "#9aa1b5",
-                boxShadow: online ? `0 0 0 3px ${ONLINE}33` : undefined,
+                background: active ? ONLINE : "#9aa1b5",
+                boxShadow: active ? `0 0 0 3px ${ONLINE}33` : undefined,
               }}
             />
-            {online ? "Online" : "Offline"}
+            {pillText}
           </span>
         )}
       </div>
@@ -175,7 +196,28 @@ export function ComputerCard({ computer, index }: { computer: CuratedComputer; i
           {online && (
             <div className="grid grid-cols-2 gap-x-5 gap-y-3">
               {computer.meters.map((m) => (
-                <Bar key={m.entityId} label={m.label} entity={entities[m.entityId]} />
+                <Bar
+                  key={m.entityId}
+                  label={m.label}
+                  entity={entities[m.entityId]}
+                  invert={m.invert}
+                  lowIsBad={m.lowIsBad}
+                />
+              ))}
+            </div>
+          )}
+
+          {badges.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {badges.map((b) => (
+                <span
+                  key={b.entityId}
+                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
+                  style={{ background: "#ffe3e7", color: "#b4344a" }}
+                >
+                  <span className="live-dot h-[7px] w-[7px] rounded-full bg-[#ff4d4f]" />
+                  {b.label}
+                </span>
               ))}
             </div>
           )}
