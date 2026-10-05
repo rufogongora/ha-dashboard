@@ -2,7 +2,7 @@ import { HardDrive, Moon, Power } from "lucide-react";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import type { HassEntity } from "home-assistant-js-websocket";
-import type { ComputerAction, CuratedComputer } from "../../config/computers";
+import type { ComputerAction, ComputerMeter, CuratedComputer } from "../../config/computers";
 import { useHa } from "../../ha/HaProvider";
 import { useNow } from "../../lib/useNow";
 
@@ -41,12 +41,12 @@ function formatFact(e: HassEntity | undefined, format: "since" | "ago" | "value"
 
 /** A metric as a 0–100 bar: percentages as-is; temperatures scaled to a
  * rough "how hot" range so the bar still reads at a glance. */
-function meterReading(e: HassEntity | undefined, invert = false, lowIsBad = false) {
+function meterReading(e: HassEntity | undefined, meter: ComputerMeter) {
   if (!isLive(e)) return null;
-  const raw = parseFloat(e!.state);
-  const v = invert ? 100 - raw : raw;
+  const raw = Number(meter.attribute ? e!.attributes[meter.attribute] : parseFloat(e!.state));
+  const v = meter.invert ? 100 - raw : raw;
   if (!Number.isFinite(v)) return null;
-  const unit = (e!.attributes.unit_of_measurement as string | undefined) ?? "";
+  const unit = meter.attribute ? "%" : ((e!.attributes.unit_of_measurement as string | undefined) ?? "");
   if (unit === "°F" || unit === "°C") {
     const c = unit === "°F" ? ((v - 32) * 5) / 9 : v;
     // A sensor stuck at exactly 0 °C isn't actually reading anything.
@@ -56,32 +56,28 @@ function meterReading(e: HassEntity | undefined, invert = false, lowIsBad = fals
   }
   const pct = Math.min(100, Math.max(0, v));
   const text = `${Math.round(v)}${unit.startsWith("%") ? "%" : unit}`;
-  return lowIsBad
+  return meter.lowIsBad
     ? { text, pct, warn: v <= 20, danger: v <= 10 }
     : { text, pct, warn: v >= 75, danger: v >= 90 };
 }
 
 function Bar({
-  label,
+  meter,
   entity,
   icon,
-  invert,
-  lowIsBad,
 }: {
-  label: string;
+  meter: ComputerMeter;
   entity: HassEntity | undefined;
   icon?: boolean;
-  invert?: boolean;
-  lowIsBad?: boolean;
 }) {
-  const r = meterReading(entity, invert, lowIsBad);
+  const r = meterReading(entity, meter);
   const color = r?.danger ? DANGER : r?.warn ? WARN : ACCENT;
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between text-[13px]">
         <span className="flex items-center gap-1.5 text-text-dim">
           {icon && <HardDrive size={13} />}
-          {label}
+          {meter.label}
         </span>
         <span className="font-semibold tabular-nums text-text" style={r?.warn ? { color } : undefined}>
           {r?.text ?? "—"}
@@ -126,7 +122,7 @@ function ActionButton({ action }: { action: ComputerAction }) {
       .catch(() => {});
   }
 
-  const Icon = action.when === "offline" ? Power : Moon;
+  const Icon = action.icon ?? (action.when === "offline" ? Power : Moon);
   return (
     <button
       onClick={onClick}
@@ -196,13 +192,7 @@ export function ComputerCard({ computer, index }: { computer: CuratedComputer; i
           {online && (
             <div className="grid grid-cols-2 gap-x-5 gap-y-3">
               {computer.meters.map((m) => (
-                <Bar
-                  key={m.entityId}
-                  label={m.label}
-                  entity={entities[m.entityId]}
-                  invert={m.invert}
-                  lowIsBad={m.lowIsBad}
-                />
+                <Bar key={m.entityId + (m.attribute ?? "")} meter={m} entity={entities[m.entityId]} />
               ))}
             </div>
           )}
@@ -225,7 +215,7 @@ export function ComputerCard({ computer, index }: { computer: CuratedComputer; i
           {computer.disks && computer.disks.length > 0 && (
             <div className="flex flex-col gap-3 border-t border-text-dim/15 pt-4">
               {computer.disks.map((d) => (
-                <Bar key={d.entityId} label={d.label} entity={entities[d.entityId]} icon />
+                <Bar key={d.entityId + (d.attribute ?? "")} meter={d} entity={entities[d.entityId]} icon />
               ))}
             </div>
           )}

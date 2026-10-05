@@ -1,4 +1,4 @@
-import { Laptop, Monitor, Server, type LucideIcon } from "lucide-react";
+import { Laptop, Monitor, RotateCcw, Server, type LucideIcon } from "lucide-react";
 
 export interface ComputerMeter {
   label: string;
@@ -7,6 +7,9 @@ export interface ComputerMeter {
   invert?: boolean;
   /** Battery-style: warn when the value is low instead of high. */
   lowIsBad?: boolean;
+  /** Read the percentage from this attribute instead of the state (HASS.Agent
+   * storage sensors keep "UsedSpacePercentage" etc. as attributes). */
+  attribute?: string;
 }
 
 export interface ComputerFact {
@@ -26,6 +29,8 @@ export interface ComputerAction {
   when: "online" | "offline";
   /** Ask for a second tap first — for things you don't want to fat-finger. */
   confirm?: boolean;
+  /** Defaults to a power icon for "offline" actions, a moon for "online". */
+  icon?: LucideIcon;
 }
 
 export interface CuratedComputer {
@@ -55,6 +60,8 @@ export interface CuratedComputer {
  * APOLLO reports through HASS.Agent → Mosquitto (MQTT) on skylab, plus a
  * wake_on_lan switch for waking it. skylab reports through the Glances
  * container in ~/docker-compose/glances and HA's Glances integration.
+ * ARTEMIS (attic) is set up like APOLLO, with HASS.Agent's Satellite
+ * Service so it reports without anyone logged in.
  * Rufos Mac reports through the Home Assistant Companion app for macOS,
  * which has no CPU/memory sensors.
  */
@@ -81,6 +88,31 @@ export const CURATED_COMPUTERS: CuratedComputer[] = [
       { label: "Sleep", domain: "button", service: "press", entityId: "button.apollo_sleep", when: "online", confirm: true },
     ],
     setupHint: "Start HASS.Agent on APOLLO.",
+  },
+  {
+    key: "artemis",
+    name: "ARTEMIS",
+    subtitle: "Attic PC",
+    icon: Monitor,
+    onlineEntity: "sensor.artemis_sessionstate",
+    meters: [
+      { label: "CPU", entityId: "sensor.artemis_cpuload" },
+      { label: "Memory", entityId: "sensor.artemis_memoryusage" },
+    ],
+    facts: [
+      { label: "Up", entityId: "sensor.artemis_lastboot", format: "since" },
+      { label: "Last active", entityId: "sensor.artemis_lastactive", format: "ago" },
+      { label: "Session", entityId: "sensor.artemis_sessionstate", format: "value" },
+    ],
+    disks: [
+      { label: "C:", entityId: "sensor.artemis_storage_c", attribute: "UsedSpacePercentage" },
+    ],
+    actions: [
+      { label: "Wake", domain: "switch", service: "turn_on", entityId: "switch.artemis_pc", when: "offline" },
+      { label: "Sleep", domain: "button", service: "press", entityId: "button.artemis_sleep", when: "online", confirm: true },
+      { label: "Restart", domain: "button", service: "press", entityId: "button.artemis_restart", when: "online", confirm: true, icon: RotateCcw },
+    ],
+    setupHint: "Start HASS.Agent on ARTEMIS.",
   },
   {
     key: "skylab",
