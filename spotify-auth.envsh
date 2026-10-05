@@ -1,0 +1,11 @@
+#!/bin/sh
+# Sourced by the nginx image's entrypoint (any /docker-entrypoint.d/*.envsh
+# is sourced, so these exports reach the envsubst step that renders
+# nginx.conf). Builds the Basic auth value for Spotify's token endpoint from
+# the runtime env, so the client secret only ever lives on the server.
+if [ -n "$SPOTIFY_CLIENT_ID" ] && [ -n "$SPOTIFY_CLIENT_SECRET" ]; then
+    SPOTIFY_BASIC_AUTH=$(printf '%s:%s' "$SPOTIFY_CLIENT_ID" "$SPOTIFY_CLIENT_SECRET" | base64 | tr -d '\n')
+else
+    SPOTIFY_BASIC_AUTH=""
+fi
+export SPOTIFY_BASIC_AUTH

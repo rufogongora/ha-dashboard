@@ -23,6 +23,7 @@ export function CameraCard({
   onToggleFavorite,
   bare,
   fill,
+  snapshotEveryMs,
 }: {
   ent: EntityWithArea;
   isFavorite?: boolean;
@@ -32,12 +33,18 @@ export function CameraCard({
   /** Fill the parent's height instead of a fixed 16:9 box (for a vertical
    * stack where each tile gets an equal flex share of the column height). */
   fill?: boolean;
+  /** Show a still that refreshes on this interval instead of the live MJPEG
+   * stream — for the phone, where several simultaneous streams would eat
+   * mobile data. Tapping through to fullscreen still opens the live stream. */
+  snapshotEveryMs?: number;
 }) {
   const { signPath } = useHa();
   const dead = isDead(ent);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [errored, setErrored] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [fullSrc, setFullSrc] = useState<string | null>(null);
+  const snapshot = snapshotEveryMs !== undefined;
   const mountedRef = useRef(true);
   const Icon = iconFor(ent);
 
@@ -50,7 +57,8 @@ export function CameraCard({
 
   const connect = useCallback(async () => {
     try {
-      const url = await signPath(`/api/camera_proxy_stream/${ent.entityId}`, 30);
+      const api = snapshot ? "camera_proxy" : "camera_proxy_stream";
+      const url = await signPath(`/api/${api}/${ent.entityId}`, 30);
       if (mountedRef.current) {
         setImgSrc(url);
         setErrored(false);
@@ -59,12 +67,39 @@ export function CameraCard({
       if (mountedRef.current) setErrored(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ent.entityId]);
+  }, [ent.entityId, snapshot]);
 
   useEffect(() => {
     if (dead) return;
     connect();
   }, [connect, dead]);
+
+  // Snapshot mode: re-sign (which also busts the cache, since each signature
+  // is a new URL) on an interval, skipping ticks while the app is hidden.
+  useEffect(() => {
+    if (!snapshot || dead) return;
+    const timer = setInterval(() => {
+      if (!document.hidden) connect();
+    }, snapshotEveryMs);
+    return () => clearInterval(timer);
+  }, [snapshot, snapshotEveryMs, dead, connect]);
+
+  async function openFullscreen() {
+    if (!imgSrc || dead) return;
+    setFullscreen(true);
+    if (!snapshot) return;
+    try {
+      const url = await signPath(`/api/camera_proxy_stream/${ent.entityId}`, 30);
+      if (mountedRef.current) setFullSrc(url);
+    } catch {
+      /* fall back to the latest still */
+    }
+  }
+
+  function closeFullscreen() {
+    setFullscreen(false);
+    setFullSrc(null); // drops the live stream connection in snapshot mode
+  }
 
   // Self-heals if the stream drops: onError below flips `errored`, which
   // schedules one reconnect attempt here.
@@ -99,9 +134,7 @@ export function CameraCard({
           bare ? "rounded-[26px]" : "rounded-xl",
           imgSrc && !dead && "cursor-pointer",
         )}
-        onClick={() => {
-          if (imgSrc && !dead) setFullscreen(true);
-        }}
+        onClick={openFullscreen}
       >
         {imgSrc && !dead ? (
           <img
@@ -117,7 +150,7 @@ export function CameraCard({
         )}
         {errored && !dead && (
           <div className={clsx("absolute rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-warn", bare ? "right-3 top-3" : "bottom-1.5 right-1.5")}>
-stream unavailable
+{snapshot ? "camera unavailable" : "stream unavailable"}
           </div>
         )}
         {imgSrc && !dead && (
@@ -130,7 +163,7 @@ stream unavailable
             <Maximize2 size={12} />
           </div>
         )}
-        {bare && imgSrc && !dead && !errored && (
+        {bare && !snapshot && imgSrc && !dead && !errored && (
           <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-bold tracking-[0.06em] text-white backdrop-blur-sm">
             <span className="live-dot h-[7px] w-[7px] rounded-full bg-[#ff4d4f]" />
             LIVE
@@ -162,15 +195,15 @@ stream unavailable
       {fullscreen && imgSrc && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-          onClick={() => setFullscreen(false)}
+          onClick={closeFullscreen}
         >
           <img
-            src={imgSrc}
+            src={fullSrc ?? imgSrc}
             alt={ent.friendlyName}
-            className="h-[80vh] w-[80vw] rounded-xl object-contain"
+            className="h-[80vh] w-full rounded-xl object-contain sm:w-[80vw]"
           />
           <button
-            onClick={() => setFullscreen(false)}
+            onClick={closeFullscreen}
             aria-label="Exit fullscreen"
             className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70"
           >

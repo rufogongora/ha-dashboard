@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2, Music, Pause, Play, Search, Volume2, X } from "lucide-react";
 import { CURATED_LIVING_ROOM_TV, CURATED_SPOTIFY_TARGET } from "../../config/curatedHome";
 import { useHa } from "../../ha/HaProvider";
-import { isSpotifyConfigured, searchTracks, type SpotifyTrack } from "../../lib/spotify";
+import { searchTracks, type SpotifyTrack } from "../../lib/spotify";
 import { useSpotifyNowPlaying } from "./useSpotifyNowPlaying";
 
 const DEBOUNCE_MS = 400;
@@ -23,7 +23,6 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [playError, setPlayError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const configured = isSpotifyConfigured();
 
   const player = useSpotifyNowPlaying();
   const track = player?.item;
@@ -43,7 +42,7 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
   const isEmpty = !query.trim();
 
   useEffect(() => {
-    if (!configured || isEmpty) return;
+    if (isEmpty) return;
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setLoading(true);
@@ -55,7 +54,7 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
     }, DEBOUNCE_MS);
     return () => clearTimeout(debounceRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, configured, isEmpty]);
+  }, [query, isEmpty]);
 
   async function play(track: SpotifyTrack) {
     setPlayingId(track.id);
@@ -140,12 +139,7 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {!configured ? (
-          <div className="flex flex-1 items-center justify-center px-6 text-center text-sm text-text-dim">
-            Spotify search isn't configured — set VITE_SPOTIFY_CLIENT_ID and VITE_SPOTIFY_CLIENT_SECRET
-            (see .env.example) and rebuild.
-          </div>
-        ) : (
+        {
           <>
             <div className="relative">
               <Search
@@ -217,7 +211,7 @@ export function SpotifySearchModal({ onClose }: { onClose: () => void }) {
               )}
             </div>
           </>
-        )}
+        }
       </div>
     </div>
   );

@@ -7,6 +7,13 @@ import App from "./App.tsx";
 import { HaProvider } from "./ha/HaProvider";
 import { ConfigProvider } from "./config/ConfigProvider";
 
+// Production only: in dev the worker would cache vite's modules and fight HMR.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>

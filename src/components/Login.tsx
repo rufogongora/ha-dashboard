@@ -39,7 +39,11 @@ export function Login() {
             </span>
             <input
               className="rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text outline-none focus:border-accent"
-              placeholder="http://192.168.1.50:8123"
+              placeholder={
+                window.location.protocol === "https:"
+                  ? "https://homeassistant.example.com"
+                  : "http://192.168.1.50:8123"
+              }
               value={hassUrl}
               onChange={(e) => setHassUrl(e.target.value)}
               autoFocus

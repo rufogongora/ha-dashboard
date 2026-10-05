@@ -2,10 +2,12 @@ services:
   ha-dashboard:
     build:
       context: .
-      args:
-        VITE_SPOTIFY_CLIENT_ID: ${VITE_SPOTIFY_CLIENT_ID}
-        VITE_SPOTIFY_CLIENT_SECRET: ${VITE_SPOTIFY_CLIENT_SECRET}
     container_name: ha-dashboard
+    # Read from .env at `docker compose up` time and only ever used by nginx
+    # inside the container (see spotify-auth.envsh) — not part of the build.
+    environment:
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID:-}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET:-}
     ports:
       - "8081:80"
     restart: unless-stopped

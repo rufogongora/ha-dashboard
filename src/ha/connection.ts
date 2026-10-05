@@ -34,11 +34,13 @@ export function clearCredentials() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-/** Normalizes a user-entered HA URL (strips trailing slash, adds http:// if missing scheme). */
+/** Normalizes a user-entered HA URL (strips trailing slash, adds a scheme if
+ * missing — https:// when this page itself is on https, since a secure page
+ * can't open an insecure websocket anyway). */
 export function normalizeHassUrl(input: string): string {
   let url = input.trim();
   if (!/^https?:\/\//i.test(url)) {
-    url = `http://${url}`;
+    url = `${window.location.protocol === "https:" ? "https" : "http"}://${url}`;
   }
   return url.replace(/\/+$/, "");
 }

@@ -7,35 +7,31 @@ export interface SpotifyTrack {
   durationMs: number;
 }
 
-const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID as string | undefined;
-const CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET as string | undefined;
-
-export function isSpotifyConfigured(): boolean {
-  return Boolean(CLIENT_ID && CLIENT_SECRET);
-}
-
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
 /**
  * Client Credentials flow — app-level auth for catalog search only (no user
- * login/consent, no personal data access). Token is cached in memory and
- * refetched a little before it actually expires.
+ * login/consent, no personal data access). The client secret never reaches
+ * the browser: /api/spotify-token is proxied to Spotify's token endpoint by
+ * the container's nginx (vite's dev server in development), which adds the
+ * Basic auth header itself. Token is cached in memory and refetched a little
+ * before it actually expires.
  */
 async function getAccessToken(): Promise<string> {
   if (cachedToken && cachedToken.expiresAt > Date.now()) return cachedToken.value;
-  if (!CLIENT_ID || !CLIENT_SECRET) {
-    throw new Error("Spotify isn't configured (missing VITE_SPOTIFY_CLIENT_ID/SECRET).");
-  }
-
-  const res = await fetch("https://accounts.spotify.com/api/token", {
+  const res = await fetch("/api/spotify-token", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${btoa(`${CLIENT_ID}:${CLIENT_SECRET}`)}`,
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: "grant_type=client_credentials",
   });
-  if (!res.ok) throw new Error(`Spotify auth failed (${res.status}).`);
+  if (!res.ok) {
+    // 503 = the proxy has no credentials; 400/401 = Spotify rejected them.
+    throw new Error(
+      [400, 401, 503].includes(res.status)
+        ? "Spotify search isn't set up on the server. Set SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env (see .env.example)."
+        : `Spotify auth failed (${res.status}).`,
+    );
+  }
 
   const data = (await res.json()) as { access_token: string; expires_in: number };
   cachedToken = {

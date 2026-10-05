@@ -19,7 +19,12 @@ export function IconToggleButton({
 }) {
   return (
     <button
-      onClick={onClick}
+      onClick={() => {
+        // A short buzz on Android so a tap registers without looking;
+        // no-op where vibration isn't supported (iOS, desktop).
+        navigator.vibrate?.(12);
+        onClick();
+      }}
       aria-pressed={on}
       title={label}
       className="flex h-[76px] w-[88px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-[18px] px-1 transition-[background-color,color,box-shadow,transform] duration-300 active:scale-95"

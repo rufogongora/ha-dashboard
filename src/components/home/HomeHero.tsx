@@ -1,24 +1,10 @@
-import { createElement, useEffect, useState } from "react";
+import { createElement } from "react";
 import { CURATED_WEATHER_ENTITY, HOUSEHOLD_NAME } from "../../config/curatedHome";
 import { useHa } from "../../ha/HaProvider";
+import { greetingFor } from "../../lib/greeting";
+import { useNow } from "../../lib/useNow";
 import { weatherIcon, weatherLabel } from "./statusIcons";
 import { useWeatherForecast } from "./useWeatherForecast";
-
-function useNow(intervalMs: number) {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), intervalMs);
-    return () => clearInterval(timer);
-  }, [intervalMs]);
-  return now;
-}
-
-function greetingFor(hour: number) {
-  if (hour < 5) return "Good night";
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
 
 /** Its own component so the once-a-second tick only re-renders the clock,
  * not the whole hero. */
