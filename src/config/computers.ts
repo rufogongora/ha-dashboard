@@ -49,6 +49,10 @@ export interface CuratedComputer {
    * app keeps its last values while asleep): a binary sensor whose on/off
    * replaces the Online/Offline pill. */
   activity?: { entityId: string; on: string; off: string };
+  /** HA template binary sensor that's on while the PC has been left on
+   * with nothing happening (see configuration.yaml on skylab; it also
+   * drives a phone notification), plus where "last used" comes from. */
+  idle?: { entityId: string; lastActiveEntity: string };
   /** Binary sensors shown as small chips while on (camera in use, ...). */
   badges?: { entityId: string; label: string }[];
   meters: ComputerMeter[];
@@ -78,6 +82,7 @@ export const CURATED_COMPUTERS: CuratedComputer[] = [
     icon: Monitor,
     onlineEntity: "sensor.apollo_sessionstate",
     pingEntity: "switch.apollo_pc",
+    idle: { entityId: "binary_sensor.apollo_idle", lastActiveEntity: "sensor.apollo_lastactive" },
     meters: [
       { label: "CPU", entityId: "sensor.apollo_cpuload" },
       { label: "Memory", entityId: "sensor.apollo_memoryusage" },
@@ -102,6 +107,7 @@ export const CURATED_COMPUTERS: CuratedComputer[] = [
     icon: Monitor,
     onlineEntity: "sensor.artemis_sessionstate",
     pingEntity: "switch.artemis_pc",
+    idle: { entityId: "binary_sensor.artemis_idle", lastActiveEntity: "sensor.artemis_lastactive" },
     meters: [
       { label: "CPU", entityId: "sensor.artemis_cpuload" },
       { label: "Memory", entityId: "sensor.artemis_memoryusage" },

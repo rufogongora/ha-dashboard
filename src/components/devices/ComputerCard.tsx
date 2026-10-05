@@ -1,4 +1,4 @@
-import { HardDrive, Moon, Power } from "lucide-react";
+import { HardDrive, Hourglass, Moon, Power } from "lucide-react";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import type { HassEntity } from "home-assistant-js-websocket";
@@ -154,6 +154,8 @@ export function ComputerCard({ computer, index }: { computer: CuratedComputer; i
   const active = activity ? entities[activity.entityId]?.state === "on" : online;
   const pillText = activity ? (active ? activity.on : activity.off) : online ? "Online" : "Offline";
   const badges = (computer.badges ?? []).filter((b) => entities[b.entityId]?.state === "on");
+  const idle = online && computer.idle && entities[computer.idle.entityId]?.state === "on";
+  const idleFor = idle ? formatFact(entities[computer.idle!.lastActiveEntity], "since", now) : null;
   const actions = (computer.actions ?? []).filter((a) => a.when === (online ? "online" : "offline"));
 
   return (
@@ -195,6 +197,16 @@ export function ComputerCard({ computer, index }: { computer: CuratedComputer; i
               {computer.meters.map((m) => (
                 <Bar key={m.entityId + (m.attribute ?? "")} meter={m} entity={entities[m.entityId]} />
               ))}
+            </div>
+          )}
+
+          {idle && (
+            <div
+              className="flex items-center gap-2 rounded-2xl px-3 py-2 text-[13px] font-semibold"
+              style={{ background: "#ffe6d2", color: "#a85a14" }}
+            >
+              <Hourglass size={15} />
+              No activity for {idleFor}. Left on by mistake?
             </div>
           )}
 
