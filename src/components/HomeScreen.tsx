@@ -3,6 +3,7 @@ import { CURATED_ROOMS, CURATED_WEATHER_ENTITY } from "../config/curatedHome";
 import { useHa } from "../ha/HaProvider";
 import { isNightFor } from "../lib/weatherTheme";
 import { CameraSidebar } from "./home/CameraSidebar";
+import { ActivityFeed } from "./home/ActivityFeed";
 import { CameraWall } from "./home/CameraWall";
 import { HomeHero } from "./home/HomeHero";
 import { RoomCard } from "./home/RoomCard";
@@ -75,6 +76,10 @@ export function HomeScreen() {
 
           <section className="rise" style={{ animationDelay: "600ms" }}>
             <h3 className="hero-shadow mx-1 mb-3 mt-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">
+              Recent activity
+            </h3>
+            <ActivityFeed compact />
+            <h3 className="hero-shadow mx-1 mb-3 mt-6 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">
               Cameras
             </h3>
             <CameraWall />
