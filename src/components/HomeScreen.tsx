@@ -76,13 +76,13 @@ export function HomeScreen() {
 
           <section className="rise" style={{ animationDelay: "600ms" }}>
             <h3 className="hero-shadow mx-1 mb-3 mt-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">
-              Recent activity
-            </h3>
-            <ActivityFeed compact />
-            <h3 className="hero-shadow mx-1 mb-3 mt-6 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">
               Cameras
             </h3>
             <CameraWall />
+            <h3 className="hero-shadow mx-1 mb-3 mt-6 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">
+              Recent activity
+            </h3>
+            <ActivityFeed compact />
           </section>
         </div>
       </div>

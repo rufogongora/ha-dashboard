@@ -134,11 +134,6 @@ function CamerasTab() {
   return (
     <>
       <PageTitle>Cameras</PageTitle>
-      <h2 className="hero-shadow mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">Activity</h2>
-      <div className="rise mb-5" style={{ animationDelay: "60ms" }}>
-        <ActivityFeed />
-      </div>
-      <h2 className="hero-shadow mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">Live</h2>
       <div className="flex flex-col gap-3">
         {CURATED_CAMERAS.map((cam, i) => (
           <div key={cam.entityId} className="rise" style={{ animationDelay: `${100 + i * 50}ms` }}>
@@ -153,6 +148,10 @@ function CamerasTab() {
       <p className="hero-shadow mt-3 text-center text-xs text-white/75">
         Stills refresh every {CAMERA_SNAPSHOT_MS / 1000}s · tap a camera for live video
       </p>
+      <h2 className="hero-shadow mb-2 mt-6 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/85">Activity</h2>
+      <div className="rise" style={{ animationDelay: `${100 + CURATED_CAMERAS.length * 50}ms` }}>
+        <ActivityFeed />
+      </div>
     </>
   );
 }
