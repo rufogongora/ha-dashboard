@@ -18,6 +18,7 @@ import { createServer } from "node:http";
 import { readFile, writeFile, rename } from "node:fs/promises";
 import { timingSafeEqual } from "node:crypto";
 import webpush from "web-push";
+import { parseDoors, startDoorWatcher } from "./doors.mjs";
 
 const {
   PORT = "8082",
@@ -27,6 +28,11 @@ const {
   VAPID_PRIVATE_KEY,
   VAPID_SUBJECT = "mailto:admin@localhost",
   DATA_FILE = "/data/subscriptions.json",
+  // Door-open alerts (doors.mjs). Needs a long-lived HA access token.
+  HA_TOKEN,
+  DOOR_SENSORS = "binary_sensor.front_door_sensor=Front Door,binary_sensor.garage_door_sensor=Garage Door,binary_sensor.print_room_garage_door=Print Room Garage Door",
+  DOOR_ALERT_MINUTES = "2",
+  DOOR_REPEAT_MINUTES = "10",
 } = process.env;
 
 if (!PUSH_SECRET || !VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
@@ -181,3 +187,17 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(Number(PORT), () => log(`push service on :${PORT}, ${Object.keys(subs).length} subscriptions`));
+
+if (HA_TOKEN) {
+  startDoorWatcher({
+    haUrl: HA_URL,
+    token: HA_TOKEN,
+    doors: parseDoors(DOOR_SENSORS),
+    thresholdMs: Number(DOOR_ALERT_MINUTES) * 60_000,
+    repeatMs: Number(DOOR_REPEAT_MINUTES) * 60_000,
+    notify: (payload) => deliver(Object.keys(subs), payload),
+    log,
+  });
+} else {
+  log("HA_TOKEN not set — door-open alerts disabled");
+}
